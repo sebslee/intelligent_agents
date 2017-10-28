@@ -1,3 +1,5 @@
+package exampleAgent;
+
 import negotiator.AgentID;
 import negotiator.Bid;
 import negotiator.actions.Accept;

@@ -1,3 +1,5 @@
+package mrBean;
+
 import negotiator.AgentID;
 import negotiator.Bid;
 import negotiator.actions.Accept;
@@ -11,8 +13,8 @@ import java.util.List;
 /**
  * OurAgent is just a copy of the ExampleAgent for now
  */
-public class OurAgent extends AbstractNegotiationParty {
-    private final String description = "Our Agent";
+public class MrBean extends AbstractNegotiationParty {
+    private final String description = "MrBean";
 
     private Bid lastReceivedOffer; // offer on the table
     private Bid myLastOffer;
