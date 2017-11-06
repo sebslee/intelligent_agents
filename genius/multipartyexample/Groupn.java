@@ -44,14 +44,29 @@ public class Groupn extends AbstractNegotiationParty {
 	 */
 	@Override
 	public Action chooseAction(List<Class<? extends Action>> validActions) {
+                Bid curr_bid;
+		if(lastReceivedBid == null){
+                        try{
+			return new Offer(getPartyId(), this.utilitySpace.getMaxUtilityBid());}
+                        catch (Exception e){ return new Offer(getPartyId(),generateRandomBid());}
+		}
+		else if((1- getTimeLine().getTime()) < Math.random()){
+			return new Accept(getPartyId(), lastReceivedBid);
+		}
+		else{
+			curr_bid = generateRandomBid();
+			while(this.utilitySpace.getUtility(curr_bid) <= Math.exp(-getTimeLine().getTime())){
+                          curr_bid = generateRandomBid();
+			}
+                return new Offer(getPartyId() , curr_bid);
+                }
 
-		// with 50% chance, counter offer
-		// if we are the first party, also offer.
+	/*	}
 		if (lastReceivedBid == null || !validActions.contains(Accept.class) || Math.random() > 0.5) {
 			return new Offer(getPartyId(), generateRandomBid());
 		} else {
 			return new Accept(getPartyId(), lastReceivedBid);
-		}
+		}*/
 	}
 
 	/**
