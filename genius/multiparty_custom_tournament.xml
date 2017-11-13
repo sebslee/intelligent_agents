@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <multilateralTournamentsConfiguration>
 	<tournaments>
 		<tournament>
@@ -6,10 +6,7 @@
 				<value>200</value>
 				<type>ROUND</type>
 			</deadline>
-			<protocolItem hasMediatorProfile="false" hasMediator="false"
-				description="Each agents makes offer, counter-offer, or accepts"
-				classPath="negotiator.protocol.StackedAlternatingOffersProtocol"
-				protocolName="Stacked Alternating Offers Protocol for Multi-Lateral Negotiation (SAOPMN)" />
+			<protocolItem classPath="negotiator.protocol.StackedAlternatingOffersProtocol" description="Each agents makes offer, counter-offer, or accepts" hasMediator="false" hasMediatorProfile="false" protocolName="Stacked Alternating Offers Protocol for Multi-Lateral Negotiation (SAOPMN)" />
 			<partyRepItems>
 				<party classPath="agents.anac.y2015.group2.Group2">
 					<properties />
@@ -17,8 +14,7 @@
 				<party classPath="agents.anac.y2015.pokerface.PokerFace">
 					<properties />
 				</party>
-				<party
-					classPath="agents.anac.y2015.TUDMixedStrategyAgent.TUDMixedStrategyAgent">
+				<party classPath="agents.anac.y2015.TUDMixedStrategyAgent.TUDMixedStrategyAgent">
 					<properties />
 				</party>
 			</partyRepItems>
@@ -27,7 +23,7 @@
 				<item url="file:etc/templates/partydomain/party2_utility.xml" />
 				<item url="file:etc/templates/partydomain/party3_utility.xml" />
 			</partyProfileItems>
-			<repeats>1</repeats>
+			<repeats>3</repeats>
 			<numberOfPartiesPerSession>3</numberOfPartiesPerSession>
 			<repetitionAllowed>false</repetitionAllowed>
 			<persistentDataType>DISABLED</persistentDataType>
