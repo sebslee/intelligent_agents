@@ -1,4 +1,4 @@
-package mrBean;
+package intelligentAgent;
 
 import negotiator.AgentID;
 import negotiator.Bid;
@@ -13,8 +13,8 @@ import java.util.List;
 /**
  * OurAgent is just a copy of the ExampleAgent for now
  */
-public class MrBean extends AbstractNegotiationParty {
-    private final String description = "MrBean";
+public class Group26 extends AbstractNegotiationParty {
+    private final String description = "Group 26";
 
     private Bid lastReceivedOffer; // offer on the table
     private Bid myLastOffer;
@@ -35,8 +35,25 @@ public class MrBean extends AbstractNegotiationParty {
     public Action chooseAction(List<Class<? extends Action>> list) {
         // According to Stacked Alternating Offers Protocol list includes
         // Accept, Offer and EndNegotiation actions only.
-    	//System.out.print("Mr bean is alive!!!!");
-    	return new Offer(this.getPartyId(), this.getMaxUtilityBid());
+        double time = getTimeLine().getTime();
+
+        if (time < 0.5) {
+            return new Offer(this.getPartyId(), this.getMaxUtilityBid());
+        } else {
+
+            // Accepts the bid on the table in this phase,
+            // if the utility of the bid is higher than Example Agent's last bid.
+            if (lastReceivedOffer != null
+                && myLastOffer != null
+                && this.utilitySpace.getUtility(lastReceivedOffer) > this.utilitySpace.getUtility(myLastOffer)) {
+
+                return new Accept(this.getPartyId(), lastReceivedOffer);
+            } else {
+                // Offering a random bid
+            	myLastOffer = generateRandomBid();
+                return new Offer(this.getPartyId(), myLastOffer);
+            }
+        }
     }
 
     /**
@@ -48,12 +65,12 @@ public class MrBean extends AbstractNegotiationParty {
     public void receiveMessage(AgentID sender, Action act) {
         super.receiveMessage(sender, act);
 
-        /*if (act instanceof Offer) { // sender is making an offer
+        if (act instanceof Offer) { // sender is making an offer
             Offer offer = (Offer) act;
 
             // storing last received offer
             lastReceivedOffer = offer.getBid();
-        }*/
+        }
     }
 
     /**
@@ -74,3 +91,4 @@ public class MrBean extends AbstractNegotiationParty {
         return null;
     }
 }
+
