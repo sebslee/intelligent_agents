@@ -21,6 +21,12 @@ dist_to_nash = []
 agents_utilities = {}
 
 def update_config(deadline_value, deadline_type, repeats):
+    """
+    Function used to update the tournament configuration file
+    :param deadline_value: value of the deadline, should be of type int
+    :param deadline_type: type of the deadline, either ROUND or TIME
+    :param repeats: number of times that the tournament should be repeated
+    """
     tree = ET.ElementTree(file=os.path.dirname(os.getcwd())+"/genius/"+tournament_config)
     for elem in tree.iter():
         if elem.tag == "deadline":
@@ -67,6 +73,9 @@ def parse_results(log):
 
 
 def show_results():
+    """
+    Function used to parse the results and plot them
+    """
     keys = agents_utilities.keys()
     values = agents_utilities.values()
     n_wins = [0, 0, 0]
@@ -93,11 +102,6 @@ def show_results():
     ax.set_xlabel(keys[0])
     ax.set_ylabel(keys[1])
     ax.set_zlabel(keys[2])
-    """
-    x, y = np.meshgrid(np.linspace(0, 1, 100), np.linspace(0, 1, 100))
-    z = (0.5*x + 0.5*y)
-    ax.plot_surface(x, y, z, rcount = 10, ccount = 10, alpha=1.0)
-    """
     plt.show()
 
 
