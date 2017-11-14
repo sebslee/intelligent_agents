@@ -19,6 +19,8 @@ min_utilities = []
 dist_to_pareto = []
 dist_to_nash = []
 agents_utilities = {}
+number_agreements = 0
+number_negotiations = 0
 
 def update_config(deadline_value, deadline_type, repeats):
     """
@@ -63,6 +65,9 @@ def parse_results(log):
             min_utilities.append(row['min.util.'])
             dist_to_pareto.append(row['Dist. to Pareto'])
             dist_to_nash.append(row['Dist. to Nash'])
+            global number_agreements, number_negotiations
+            number_agreements = number_agreements + (1 if row['Agreement'] == "Yes" else 0)
+            number_negotiations = number_negotiations + 1
             if not agents_utilities:
                 agents_utilities[row['Agent 1'][:row['Agent 1'].find('@')]] = []
                 agents_utilities[row['Agent 2'][:row['Agent 2'].find('@')]] = []
@@ -79,11 +84,17 @@ def show_results():
     keys = agents_utilities.keys()
     values = agents_utilities.values()
     n_wins = [0, 0, 0]
-    for utilities in map(list, zip(*values)):
+    value_per_round = map(list, zip(*values))
+    for rnd in value_per_round:
+        if rnd == [0, 0, 0]:
+            value_per_round.remove(rnd)
+    for utilities in value_per_round:
         n_wins[utilities.index(max(utilities))] += 1
-    print("Agent " + keys[0] + " ranked 1st: " + str(n_wins[0]) + " times")
-    print("Agent " + keys[1] + " ranked 1st: " + str(n_wins[1]) + " times")
-    print("Agent " + keys[2] + " ranked 1st: " + str(n_wins[2]) + " times")
+    print("Agent " + keys[0] + " ranked 1st: " + str(n_wins[0]) + " times in " + str(number_negotiations) + " negotiations")
+    print("Agent " + keys[1] + " ranked 1st: " + str(n_wins[1]) + " times in " + str(number_negotiations) + " negotiations")
+    print("Agent " + keys[2] + " ranked 1st: " + str(n_wins[2]) + " times in " + str(number_negotiations) + " negotiations")
+    print("Number of successful negotiations is: " + str(number_agreements))
+    print("Number of failed negotiations is: " + str(number_negotiations - number_agreements))
     plt.subplots()
     index = np.arange(len(values[0]))
     bar_width = 0.2
@@ -96,17 +107,19 @@ def show_results():
     plt.xticks(index+1.5*bar_width, index+1)
     plt.legend()
     plt.tight_layout()
+    """
     fig = plt.figure()
     ax = Axes3D(fig)
     ax.plot(values[0], values[1], values[2], 'ro')
     ax.set_xlabel(keys[0])
     ax.set_ylabel(keys[1])
     ax.set_zlabel(keys[2])
+    """
     plt.show()
 
 
 if __name__ == "__main__":
-    update_config(200, "ROUND", 3)
+    update_config(200, "ROUND", 1)
     run_tournament(tournament_config, output_log)
     parse_results(output_log)
     show_results()
