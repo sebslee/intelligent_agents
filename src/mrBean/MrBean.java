@@ -3,8 +3,10 @@ package mrBean;
 import negotiator.AgentID;
 import negotiator.Bid;
 import negotiator.actions.Accept;
+import negotiator.boaframework.OutcomeSpace;
 import negotiator.actions.Action;
 import negotiator.actions.Offer;
+import negotiator.bidding.BidDetails;
 import negotiator.parties.AbstractNegotiationParty;
 import negotiator.parties.NegotiationInfo;
 
@@ -18,10 +20,13 @@ public class MrBean extends AbstractNegotiationParty {
 
     private Bid lastReceivedOffer; // offer on the table
     private Bid myLastOffer;
+    private OutcomeSpace outcome_space;
 
     @Override
     public void init(NegotiationInfo info) {
         super.init(info);
+        outcome_space = new OutcomeSpace(this.utilitySpace);
+        outcome_space.generateAllBids(this.utilitySpace);
     }
 
     /**
@@ -35,8 +40,18 @@ public class MrBean extends AbstractNegotiationParty {
     public Action chooseAction(List<Class<? extends Action>> list) {
         // According to Stacked Alternating Offers Protocol list includes
         // Accept, Offer and EndNegotiation actions only.
-    	//System.out.print("Mr bean is alive!!!!");
-    	return new Offer(this.getPartyId(), this.getMaxUtilityBid());
+    	myLastOffer = (outcome_space.getBidNearUtility(getTargetUtility(0.5, 3))).getBid();
+    	double util = this.utilitySpace.getUtility(myLastOffer);
+    	System.out.format("my last offer is %s", myLastOffer);
+    	if(lastReceivedOffer == null) {
+    		return new Offer(this.getPartyId(), myLastOffer);
+    	}
+    	if(acceptOrOffer(lastReceivedOffer, util)) {
+    		return new Accept(this.getPartyId(), lastReceivedOffer);
+    	}
+    	else {
+    		return new Offer(this.getPartyId(), myLastOffer);
+    	}
     }
 
     /**
@@ -48,12 +63,25 @@ public class MrBean extends AbstractNegotiationParty {
     public void receiveMessage(AgentID sender, Action act) {
         super.receiveMessage(sender, act);
 
-        /*if (act instanceof Offer) { // sender is making an offer
+        if (act instanceof Offer) { // sender is making an offer
             Offer offer = (Offer) act;
 
             // storing last received offer
             lastReceivedOffer = offer.getBid();
-        }*/
+        }
+    }
+    
+    public boolean acceptOrOffer(Bid bid, double target) {
+    	if(this.utilitySpace.getUtility(bid) < target) {
+    		return false;
+    	}
+    	else {
+    		return true;
+    	}
+    }
+    
+    public double getTargetUtility(double k, double b) {
+    	return 1.0 - 0.3*(k + (1-k)*Math.pow((getTimeLine().getTime()), 1/b));
     }
 
     /**
