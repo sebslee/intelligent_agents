@@ -1,4 +1,5 @@
-package mrBean;
+package mrBean_2;
+
 import java.util.HashMap;
 import java.util.List;
 import negotiator.AgentID;
@@ -30,7 +31,7 @@ import negotiator.boaframework.OutcomeSpace;
    * OurAgent is just a copy of the ExampleAgent for now
    */
 public class MrBean extends AbstractNegotiationParty {
-    private final String description = "MrBean";
+    private final String description = "mrBean";
 
     private Bid lastReceivedOffer; // offer on the table
     //private Bid myLastOffer;

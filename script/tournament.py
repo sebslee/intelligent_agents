@@ -22,6 +22,7 @@ agents_utilities = {}
 number_agreements = 0
 number_negotiations = 0
 
+
 def update_config(deadline_value, deadline_type, repeats):
     """
     Function used to update the tournament configuration file
@@ -86,8 +87,9 @@ def show_results():
     n_wins = [0, 0, 0]
     value_per_round = map(list, zip(*values))
     for rnd in value_per_round:
-        if rnd == [0, 0, 0]:
+        if rnd == [0.0, 0.0, 0.0]:
             value_per_round.remove(rnd)
+    print value_per_round
     for utilities in value_per_round:
         n_wins[utilities.index(max(utilities))] += 1
     print("Agent " + keys[0] + " ranked 1st: " + str(n_wins[0]) + " times in " + str(number_negotiations) + " negotiations")
@@ -119,7 +121,7 @@ def show_results():
 
 
 if __name__ == "__main__":
-    update_config(200, "ROUND", 1)
+    update_config(200, "ROUND", 5)
     run_tournament(tournament_config, output_log)
     parse_results(output_log)
     show_results()
