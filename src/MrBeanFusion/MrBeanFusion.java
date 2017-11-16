@@ -33,11 +33,11 @@ public class MrBeanFusion extends AbstractNegotiationParty {
     private double Umax = 1.0;
     private double Umin = 0.7;
     
+    private double k = 0.1;
+    private double b = 0.25;
+    
     private int hashcode_a;
     private int hashcode_b;
-    
-    private double k = 0.2;
-    private double b = 0.25;
     
     private BidHistory agentAhistory ;
     private BidHistory agentBhistory ;
@@ -141,14 +141,16 @@ public class MrBeanFusion extends AbstractNegotiationParty {
     private Bid getAverageBid(){
       	  
 		double utility_a , utility_b , avg_utility;
+		
 		utility_a = agentAhistory.getBestBidDetails().getMyUndiscountedUtil();
-		utility_b = agentBhistory.getBestBidDetails().getMyUndiscountedUtil();      
+		utility_b = agentBhistory.getBestBidDetails().getMyUndiscountedUtil(); 
+		
 		avg_utility = ((utility_a + utility_b) /2) + 0.1;
 	      
-		return (  outcome_space.getBidNearUtility(avg_utility).getBid());
+		return outcome_space.getBidNearUtility(avg_utility).getBid();
 	}
 	
-        public String getDescription() {
+    public String getDescription() {
         return description;
     }
 }

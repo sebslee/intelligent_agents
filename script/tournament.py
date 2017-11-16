@@ -104,12 +104,13 @@ def show_results():
 
     ax1 = fig.add_subplot(gs[0, :])
     index = np.arange(len(values[0]))
-    ax1.bar(index + 0*bar_width, values[0], bar_width, alpha=opacity, color='b', label=keys[0])
-    ax1.bar(index + 1*bar_width, values[1], bar_width, alpha=opacity, color='r', label=keys[1])
-    ax1.bar(index + 2*bar_width, values[2], bar_width, alpha=opacity, color='g', label=keys[2])
+    ax1.bar(index - 1*bar_width, values[0], bar_width, alpha=opacity, color='b', label=keys[0])
+    ax1.bar(index + 0*bar_width, values[1], bar_width, alpha=opacity, color='r', label=keys[1])
+    ax1.bar(index + 1*bar_width, values[2], bar_width, alpha=opacity, color='g', label=keys[2])
     ax1.set_ylabel('Utilities')
     ax1.set_title('Utility Comparison')
     ax1.set_ylim([0, 1])
+    ax1.legend()
 
     bar_width = 0.5
     ax2 = fig.add_subplot(gs[1, 0])
@@ -128,7 +129,7 @@ def show_results():
 
 
 if __name__ == "__main__":
-    update_config(200, "ROUND", 1)
+    update_config(200, "ROUND", 2)
     run_tournament(tournament_config, output_log)
     parse_results(output_log)
     show_results()
