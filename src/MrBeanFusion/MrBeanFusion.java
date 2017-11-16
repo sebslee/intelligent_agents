@@ -33,8 +33,10 @@ public class MrBeanFusion extends AbstractNegotiationParty {
     private double Umax = 1.0;
     private double Umin = 0.7;
     
-    private double k = 0.1;
-    private double b = 0.25;
+    private double k = 0.2;
+    private double b = 0.3;
+    
+    private double percent_increase = 0.05;
     
     private int hashcode_a;
     private int hashcode_b;
@@ -56,8 +58,9 @@ public class MrBeanFusion extends AbstractNegotiationParty {
     public Action chooseAction(List<Class<? extends Action>> list) {
         // According to Stacked Alternating Offers Protocol list includes
         // Accept, Offer and EndNegotiation actions only.
-        //double util;
+        double util;
     	if(maxUtilityOffer == null){
+    			System.out.println("\nOffering Maximum Utility Bid at the beginning");
     	        maxUtilityOffer = this.getMaxUtilityBid();
     	        return new Offer(this.getPartyId(), maxUtilityOffer);
     	}
@@ -70,23 +73,27 @@ public class MrBeanFusion extends AbstractNegotiationParty {
 
     	}
     	
-        //util = this.utilitySpace.getUtility(myLastOffer);
+        util = this.getTargetUtility(k, b);
+        System.out.format("\nMrBean: Target utility %f \n", util);
     	
         //Every now and then just offer our maximum, depending on time..
         if(Math.random() > getTimeLine().getTime() + 0.3){
             	//myLastOffer = this.getMaxUtilityBid();
+        		System.out.println("\nOffering Maximum Utility Bid");
+        		System.out.format("\nMaximum Utility is %f\n", this.utilitySpace.getUtility(maxUtilityOffer));
     	        return new Offer(this.getPartyId(), maxUtilityOffer);
         }
   
-    	if(acceptOrOffer(lastReceivedOffer, (getTargetUtility(k, b)))) {
+    	if(acceptOrOffer(lastReceivedOffer, util)) {
+    		System.out.println("\nAccepting Offer");
     		return new Accept(this.getPartyId(), lastReceivedOffer);
     	}
     	else {
     		//return new Offer(this.getPartyId(), myLastOffer);
     		//Return average bid then!
     		myLastOffer =  getAverageBid();
-    		System.out.format("MrBean: Target utility %f ",(getTargetUtility(k, b)) );
-            return new Offer (this.getPartyId(), getAverageBid());    
+    		System.out.format("\nMaking Offer with Average Utility %f\n", this.utilitySpace.getUtility(myLastOffer));
+            return new Offer (this.getPartyId(), myLastOffer);    
     	}
     }
  
@@ -105,6 +112,8 @@ public class MrBeanFusion extends AbstractNegotiationParty {
         	}
             Offer offer = (Offer) act;
             lastReceivedOffer = offer.getBid();
+            System.out.format("\nReceived Offer with Utility %f from Agent %s\n", 
+            		this.utilitySpace.getUtility(lastReceivedOffer), offer.getAgent().getName());
             lastReceivedOfferDetails = new BidDetails(lastReceivedOffer , this.utilitySpace.getUtility(lastReceivedOffer), getTimeLine().getTime() );
             if(sender.hashCode() == hashcode_a) {
             	agentAhistory.add(lastReceivedOfferDetails);
@@ -145,7 +154,10 @@ public class MrBeanFusion extends AbstractNegotiationParty {
 		utility_a = agentAhistory.getBestBidDetails().getMyUndiscountedUtil();
 		utility_b = agentBhistory.getBestBidDetails().getMyUndiscountedUtil(); 
 		
-		avg_utility = ((utility_a + utility_b) /2) + 0.1;
+		System.out.format("\nBest Bid made by agent A is %f\n", utility_a);
+		System.out.format("\nBest Bid made by agent B is %f\n", utility_b);
+		
+		avg_utility = ((utility_a + utility_b) /2)*(1+percent_increase);
 	      
 		return outcome_space.getBidNearUtility(avg_utility).getBid();
 	}
