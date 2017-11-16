@@ -22,7 +22,7 @@ public class MrBean extends AbstractNegotiationParty {
     private OutcomeSpace outcome_space;
     
     private double Umax = 1.0;
-    private double Umin = 0.8;
+    private double Umin = 0.6;
 
     @Override
     public void init(NegotiationInfo info) {
@@ -42,9 +42,9 @@ public class MrBean extends AbstractNegotiationParty {
     public Action chooseAction(List<Class<? extends Action>> list) {
         // According to Stacked Alternating Offers Protocol list includes
         // Accept, Offer and EndNegotiation actions only.
-    	myLastOffer = (outcome_space.getBidNearUtility(getTargetUtility(0.1, 0.25))).getBid();
+    	myLastOffer = (outcome_space.getBidNearUtility(getTargetUtility(0.2, 0.2))).getBid();
     	double util = this.utilitySpace.getUtility(myLastOffer);
-    	System.out.format("my last offer is %s", myLastOffer);
+    	System.out.format("\nmy last offer is %f\n\n", util);
     	if(lastReceivedOffer == null) {
     		return new Offer(this.getPartyId(), myLastOffer);
     	}
@@ -83,7 +83,7 @@ public class MrBean extends AbstractNegotiationParty {
     }
     
     public double getTargetUtility(double k, double b) {
-    	return Umax + (Umin - Umax)*(k + (1-k)*Math.pow((getTimeLine().getTime()), 1/b));
+    	return Umax + (Umin - Umax)*(k + (1.0-k)*Math.pow(getTimeLine().getTime(), 1.0/b));
     }
 
     /**

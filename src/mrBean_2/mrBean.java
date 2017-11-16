@@ -30,7 +30,7 @@ import negotiator.boaframework.OutcomeSpace;
    /**
    * OurAgent is just a copy of the ExampleAgent for now
    */
-public class MrBean extends AbstractNegotiationParty {
+public class mrBean extends AbstractNegotiationParty {
     private final String description = "mrBean";
 
     private Bid lastReceivedOffer; // offer on the table
@@ -47,9 +47,9 @@ public class MrBean extends AbstractNegotiationParty {
     @Override
     public void init(NegotiationInfo info) {
         super.init(info);
-	hashcode_a = 0;
-	hashcode_b = 0;
-	OutcomeSpace_mrbean = new OutcomeSpace(this.utilitySpace);
+        hashcode_a = 0;
+        hashcode_b = 0;
+        OutcomeSpace_mrbean = new OutcomeSpace(this.utilitySpace);
         OutcomeSpace_mrbean.generateAllBids(this.utilitySpace);
     }
 
@@ -67,11 +67,11 @@ public class MrBean extends AbstractNegotiationParty {
     	//System.out.print("Mr bean is alive!!!!");
     	//return new Offer(this.getPartyId(), this.getMaxUtilityBid());
 		if(hashcode_a != 0 && hashcode_b != 0) {
-	   return new Offer (this.getPartyId(), getAverageBid());
+			return new Offer (this.getPartyId(), getAverageBid());
 		}
     	else{
-	    return new Offer(this.getPartyId(), this.getMaxUtilityBid());
-	    	}
+    		return new Offer(this.getPartyId(), this.getMaxUtilityBid());
+	    }
     }
 
     /**
@@ -84,21 +84,22 @@ public class MrBean extends AbstractNegotiationParty {
     
         super.receiveMessage(sender, act);
 
-	       BidDetails lastReceivedOfferDetails;
+	    BidDetails lastReceivedOfferDetails;
 	   
         if (act instanceof Offer) { // sender is making an offer
-	    if(hashcode_a == 0)
-		hashcode_a = sender.hashCode();
-	    else if (hashcode_b == 0)
-		hashcode_b = sender.hashCode();
+		    if(hashcode_a == 0) {
+		    	hashcode_a = sender.hashCode();
+		    }
+		    else if (hashcode_b == 0) {
+		    	hashcode_b = sender.hashCode();
+		    }
             Offer offer = (Offer) act;
             lastReceivedOffer = offer.getBid();
             lastReceivedOfferDetails = new BidDetails(lastReceivedOffer , this.utilitySpace.getUtility(lastReceivedOffer), getTimeLine().getTime() );
             if(sender.hashCode() == hashcode_a)
-		agentAhistory.add(lastReceivedOfferDetails);
+            	agentAhistory.add(lastReceivedOfferDetails);
             else if(sender.hashCode() == hashcode_b)
-		agentBhistory.add(lastReceivedOfferDetails);
-	
+            	agentBhistory.add(lastReceivedOfferDetails);
 		}
     }
 
@@ -121,12 +122,12 @@ public class MrBean extends AbstractNegotiationParty {
         return null;
     }
     
-      private Bid getAverageBid(){
-	double utility_a , utility_b , avg_utility;
-	utility_a = agentAhistory.getBestBidDetails().getMyUndiscountedUtil();
-	utility_b = agentBhistory.getBestBidDetails().getMyUndiscountedUtil();      
-	avg_utility = (utility_a + utility_b) /2;
-      
-	return (  OutcomeSpace_mrbean.getBidNearUtility(avg_utility).getBid());
+    private Bid getAverageBid(){
+		double utility_a , utility_b , avg_utility;
+		utility_a = agentAhistory.getBestBidDetails().getMyUndiscountedUtil();
+		utility_b = agentBhistory.getBestBidDetails().getMyUndiscountedUtil();      
+		avg_utility = (utility_a + utility_b) /2.0;
+	      
+		return OutcomeSpace_mrbean.getBidNearUtility(avg_utility).getBid();
 	}
 }
