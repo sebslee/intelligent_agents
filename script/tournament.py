@@ -2,7 +2,7 @@ import subprocess
 import os
 import csv
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
+from matplotlib import gridspec
 import numpy as np
 try:
     import xml.etree.cElementTree as ET
@@ -86,42 +86,49 @@ def show_results():
     values = agents_utilities.values()
     n_wins = [0, 0, 0]
     value_per_round = map(list, zip(*values))
-    for rnd in value_per_round:
-        if rnd == [0.0, 0.0, 0.0]:
-            value_per_round.remove(rnd)
-    print value_per_round
     for utilities in value_per_round:
-        n_wins[utilities.index(max(utilities))] += 1
+        maximum = max(utilities)
+        if maximum != 0:
+            n_wins[utilities.index(maximum)] += 1
     print("Agent " + keys[0] + " ranked 1st: " + str(n_wins[0]) + " times in " + str(number_negotiations) + " negotiations")
     print("Agent " + keys[1] + " ranked 1st: " + str(n_wins[1]) + " times in " + str(number_negotiations) + " negotiations")
     print("Agent " + keys[2] + " ranked 1st: " + str(n_wins[2]) + " times in " + str(number_negotiations) + " negotiations")
     print("Number of successful negotiations is: " + str(number_agreements))
     print("Number of failed negotiations is: " + str(number_negotiations - number_agreements))
-    plt.subplots()
-    index = np.arange(len(values[0]))
+
+    fig = plt.figure()
+    gs = gridspec.GridSpec(2, 2)
+
     bar_width = 0.2
     opacity = 0.7
-    rects1 = plt.bar(index + 0*bar_width, values[0], bar_width, alpha=opacity, color='b', label=keys[0])
-    rects2 = plt.bar(index + 1*bar_width, values[1], bar_width, alpha=opacity, color='r', label=keys[1])
-    rects3 = plt.bar(index + 2*bar_width, values[2], bar_width, alpha=opacity, color='g', label=keys[2])
-    plt.ylabel('Utilities')
-    plt.title('Utility Comparison')
-    plt.xticks(index+1.5*bar_width, index+1)
-    plt.legend()
+
+    ax1 = fig.add_subplot(gs[0, :])
+    index = np.arange(len(values[0]))
+    ax1.bar(index + 0*bar_width, values[0], bar_width, alpha=opacity, color='b', label=keys[0])
+    ax1.bar(index + 1*bar_width, values[1], bar_width, alpha=opacity, color='r', label=keys[1])
+    ax1.bar(index + 2*bar_width, values[2], bar_width, alpha=opacity, color='g', label=keys[2])
+    ax1.set_ylabel('Utilities')
+    ax1.set_title('Utility Comparison')
+    ax1.set_ylim([0, 1])
+
+    bar_width = 0.5
+    ax2 = fig.add_subplot(gs[1, 0])
+    index = np.arange(len(dist_to_pareto))
+    ax2.bar(index, dist_to_pareto, bar_width, alpha=opacity, label=index+1)
+    ax2.set_title('Distance to Pareto Frontier')
+    ax2.set_ylim([0, 2])
+
+    ax3 = fig.add_subplot(gs[1, 1])
+    ax3.bar(index, dist_to_nash, bar_width, alpha=opacity, label=index + 1)
+    ax3.set_title('Distance to Nash Product')
+    ax3.set_ylim([0, 2])
+
     plt.tight_layout()
-    """
-    fig = plt.figure()
-    ax = Axes3D(fig)
-    ax.plot(values[0], values[1], values[2], 'ro')
-    ax.set_xlabel(keys[0])
-    ax.set_ylabel(keys[1])
-    ax.set_zlabel(keys[2])
-    """
     plt.show()
 
 
 if __name__ == "__main__":
-    update_config(200, "ROUND", 5)
+    update_config(200, "ROUND", 1)
     run_tournament(tournament_config, output_log)
     parse_results(output_log)
     show_results()
