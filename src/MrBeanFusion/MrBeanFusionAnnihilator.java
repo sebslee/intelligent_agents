@@ -33,7 +33,7 @@ public class MrBeanFusionAnnihilator extends AbstractNegotiationParty {
     private double k = 0.2;
     private double b = 0.3;
     
-    private double percent_increase = 0.00;
+    private double percent_increase = 0.05;
     
     private int hashcode_a;
     private int hashcode_b;
