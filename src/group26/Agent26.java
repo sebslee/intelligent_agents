@@ -59,6 +59,7 @@ public class Agent26 extends AbstractNegotiationParty {
     int freq_a [][];  
     int freq_b [][];
     double max_weight = 0;
+    double min_weight = 1;
     AdditiveUtilitySpace additiveUtilitySpace_i;
     
     
@@ -66,13 +67,13 @@ public class Agent26 extends AbstractNegotiationParty {
     public void init(NegotiationInfo info) {
         super.init(info);
         // Initialize the outcome_space variable and generate all bids
-        outcome_space = new OutcomeSpace(this.utilitySpace);
-        outcome_space.generateAllBids(this.utilitySpace);
+        //outcome_space = new OutcomeSpace(this.utilitySpace);
+        //outcome_space.generateAllBids(this.utilitySpace);
         // Initialize the Agent's histories and the hashcodes to 0
         hashcode_a = 0;
         hashcode_b = 0;
-        agentAhistory= new BidHistory();
-        agentBhistory = new BidHistory();
+        //agentAhistory= new BidHistory();
+        //agentBhistory = new BidHistory();
         // Get the Max and Min Utility Offers
         maxUtilityOffer = this.getMaxUtilityBid();
         minUtilityOffer = this.getMinUtilityBid();
@@ -100,6 +101,9 @@ public class Agent26 extends AbstractNegotiationParty {
         	evaluator = (EvaluatorDiscrete) (((AdditiveUtilitySpace)this.utilitySpace).getEvaluator(lIssue.getNumber()));
         	values = lIssueDiscrete.getValues();
         	curr_weight = (additiveUtilitySpace_i.getWeight(lIssue.getNumber()));
+		if(curr_weight < min_weight) {
+		    min_weight = curr_weight;
+		}
         	if(curr_weight > max_weight){
         		max_weight = curr_weight;
         	}	
@@ -193,12 +197,13 @@ public class Agent26 extends AbstractNegotiationParty {
             										  getTimeLine().getTime());
             if(sender.hashCode() == hashcode_a){
             	// Store the offer in Agent A's History and Update the Frequencies
-            	agentAhistory.add(lastReceivedOfferDetails);
+            	//agentAhistory.add(lastReceivedOfferDetails);
             	update_freq(lastReceivedOffer , 1);
             }
             else if(sender.hashCode() == hashcode_b){
             	// Store the offer in Agent B's History
-            	agentBhistory.add(lastReceivedOfferDetails);
+            	//agentBhistory.add(lastReceivedOfferDetails);
+		update_freq(lastReceivedOffer , 0);
         	}
 		}
     }
@@ -292,8 +297,9 @@ public class Agent26 extends AbstractNegotiationParty {
            			num_values ++;
            		}
           
-           		//Throw a coin on the re-normalized weight ... 
-           		if(Math.random() > /* (1.7  - getTimeLine().getTime()) */ (Math.log((additiveUtilitySpace_i.getWeight(lIssue.getNumber()) / max_weight) )+1)) 
+           		//Throw a coin on the re-normalized weight ...
+			if(additiveUtilitySpace_i.getWeight(lIssue.getNumber()) != max_weight){
+			    if(Math.random() >   (1.5 - getTimeLine().getTime()) *  (additiveUtilitySpace_i.getWeight(lIssue.getNumber())  - min_weight )/ (max_weight - min_weight)) 
            		{
            			randr = Math.random();
            			if( randr < 1/3){
@@ -314,7 +320,7 @@ public class Agent26 extends AbstractNegotiationParty {
         			   agent_max_val = 0;
         			   agent_max_val_idx = 0;
         			   for(int j = 0; j < lIssueDiscrete.getNumberOfValues() ; j++){
-        				   curr_max_agent_value = freq_a [issue_idx][j];
+        				   curr_max_agent_value = freq_b [issue_idx][j];
         				   if(curr_max_agent_value > agent_max_val){
         					   agent_max_val = curr_max_agent_value;
         					   agent_max_val_idx = j;
@@ -327,11 +333,14 @@ public class Agent26 extends AbstractNegotiationParty {
         			   //chose random value ...
         			   selected_value = randomnr.nextInt(num_values);
         		   }          
-        	   }
+			}
         	   
         	   else {
         		   selected_value = max_value_idx;
-        	   }
+        	   }}
+		  else {
+        		   selected_value = max_value_idx;
+        	   }	
           
         	   curr_bid_value.put(lIssue.getNumber(), lIssueDiscrete.getValue(selected_value));                    
         	   issue_idx ++;
