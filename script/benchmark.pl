@@ -41,7 +41,7 @@ my $global_nash_distance;
 my $global_pareto_distance;
 my $global_wins;
 my $global_fails;
-my $nego_per_tournament;
+#my $nego_per_tournament;
 my @agents;
 my $num_of_domains;
 
