@@ -13,21 +13,22 @@ import negotiator.bidding.BidDetails;
 import negotiator.boaframework.OutcomeSpace;
 
 
-public class MyAgent extends AbstractNegotiationParty {
+public class Agent26 extends AbstractNegotiationParty {
     private final String description = "Group 26 Agent";
 
     private Bid lastReceivedOffer; // offer on the table
     private Bid myLastOffer;
     private Bid maxUtilityOffer;
+    private Bid minUtilityOffer;
     private OutcomeSpace outcome_space;
     
-    private double Umax = 1.0;
-    private double Umin = 0.7;
+    private double Umax;
+    private double Umin;
     
-    private double k = 0.2;
-    private double b = 0.3;
+    private double k;
+    private double b;
     
-    private double percent_increase = 0.05;
+    private double percent_increase;
     
     private int hashcode_a;
     private int hashcode_b;
@@ -38,51 +39,53 @@ public class MyAgent extends AbstractNegotiationParty {
     @Override
     public void init(NegotiationInfo info) {
         super.init(info);
+        // Initialize the outcome_space variable and generate all bids
         outcome_space = new OutcomeSpace(this.utilitySpace);
         outcome_space.generateAllBids(this.utilitySpace);
-        agentAhistory= new BidHistory();
-        agentBhistory = new BidHistory();
+        // Initialize the Agent's histories and the hashcodes to 0
         hashcode_a = 0;
         hashcode_b = 0;
+        agentAhistory= new BidHistory();
+        agentBhistory = new BidHistory();
+        // Get the Max and Min Utility Offers
+        maxUtilityOffer = this.getMaxUtilityBid();
+        minUtilityOffer = this.getMinUtilityBid();
+        // Initialize the parameters used to compute the target utility
+        Umax = 1.0;
+        Umin = (this.utilitySpace.getUtility(minUtilityOffer)+Umax)/2.0;
+        k = 0.2;
+        b = 0.3;
+        percent_increase = 0.05;
     }
     
     public Action chooseAction(List<Class<? extends Action>> list) {
         // According to Stacked Alternating Offers Protocol list includes
         // Accept, Offer and EndNegotiation actions only.
-        double util;
-    	if(maxUtilityOffer == null){
-    			//System.out.println("\nOffering Maximum Utility Bid at the beginning");
-    	        maxUtilityOffer = this.getMaxUtilityBid();
-    	        return new Offer(this.getPartyId(), maxUtilityOffer);
-    	}
     	if(lastReceivedOffer == null) {
-    		//return new Offer(this.getPartyId(), myLastOffer);
     		//Lets start with our maximum because we are bad boys
-    		////System.out.format("They are calling me!");
-    		myLastOffer = this.getMaxUtilityBid();                
+    		myLastOffer = maxUtilityOffer;                
     		return new Offer(this.getPartyId(), myLastOffer);
 
     	}
     	
-        util = this.getTargetUtility(k, b);
-        //System.out.format("\nMrBean: Target utility %f \n", util);
-    	
-        //Every now and then just offer our maximum, depending on time..
+        // Every now and then just offer our maximum, depending on time..
         if(Math.random() > getTimeLine().getTime() + 0.3){
-        		//System.out.println("\nOffering Maximum Utility Bid");
-        		//System.out.format("\nMaximum Utility is %f\n", this.utilitySpace.getUtility(maxUtilityOffer));
-    	        return new Offer(this.getPartyId(), maxUtilityOffer);
+        	return new Offer(this.getPartyId(), maxUtilityOffer);
         }
+        
+        // Compute the target utility
+    	double util;
+        util = this.getTargetUtility(k, b);
   
     	if(acceptOrOffer(lastReceivedOffer, util)) {
-    		//System.out.println("\nAccepting Offer");
+    		// Accept the received Offer
     		return new Accept(this.getPartyId(), lastReceivedOffer);
     	}
     	else {
+    		// Reject the received Offer and make a Counter Offer
     		//Return average bid then!
     		myLastOffer =  getAverageBid();
-    		//System.out.format("\nMaking Offer with Average Utility %f\n", this.utilitySpace.getUtility(myLastOffer));
-            return new Offer (this.getPartyId(), myLastOffer);    
+    		return new Offer (this.getPartyId(), myLastOffer);    
     	}
     }
  
@@ -92,28 +95,32 @@ public class MyAgent extends AbstractNegotiationParty {
         super.receiveMessage(sender, act);
         BidDetails lastReceivedOfferDetails;
 
-        if (act instanceof Offer) { // sender is making an offer
+        if (act instanceof Offer) {
         	if(hashcode_a == 0) {
+        		// Agent A is the first agent to make an offer
         		hashcode_a = sender.hashCode();
         	}
         	else if (hashcode_b == 0) {
-        			hashcode_b = sender.hashCode();
+        		// Agent B is the second agent to make an offer
+        		hashcode_b = sender.hashCode();
         	}
             Offer offer = (Offer) act;
             lastReceivedOffer = offer.getBid();
-            //System.out.format("\nReceived Offer with Utility %f from Agent %s\n", 
-            //		this.utilitySpace.getUtility(lastReceivedOffer), offer.getAgent().getName());
-            lastReceivedOfferDetails = new BidDetails(lastReceivedOffer , this.utilitySpace.getUtility(lastReceivedOffer), getTimeLine().getTime() );
+            lastReceivedOfferDetails = new BidDetails(lastReceivedOffer, 
+            										  this.utilitySpace.getUtility(lastReceivedOffer),
+            										  getTimeLine().getTime());
             if(sender.hashCode() == hashcode_a) {
+            	// Store the offer in Agent A's History
             	agentAhistory.add(lastReceivedOfferDetails);
             }
             else if(sender.hashCode() == hashcode_b){
+            	// Store the offer in Agent B's History
             	agentBhistory.add(lastReceivedOfferDetails);
         	}
 		}
     }
     
-    //MyAgent specific methods ..
+    // Method used to decided whether to Accept a Bid or Reject it
     public boolean acceptOrOffer(Bid bid, double target) {
     	if(this.utilitySpace.getUtility(bid) < target) {
     		return false;
@@ -123,10 +130,12 @@ public class MyAgent extends AbstractNegotiationParty {
     	}
     }
     
+    // Method used to get the target Utility for our Agent based on given paramters and on time
     public double getTargetUtility(double k, double b) {
     	return Umax + (Umin - Umax)*(k + (1-k)*Math.pow((getTimeLine().getTime()), 1/b));
     }
     
+    // Method used to get the Bid with most Utility for our Agent
     private Bid getMaxUtilityBid() {
         try {
             return this.utilitySpace.getMaxUtilityBid();
@@ -136,18 +145,22 @@ public class MyAgent extends AbstractNegotiationParty {
         return null;
     }
     
+    // Method used to get the Bid with least Utility for our Agent
+    private Bid getMinUtilityBid() {
+    	try {
+            return this.utilitySpace.getMinUtilityBid();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+    
+    // Method to return a Bid whose utility is the average of the best Offers from the other two Agents
     private Bid getAverageBid(){
-      	  
 		double utility_a , utility_b , avg_utility;
-		
 		utility_a = agentAhistory.getBestBidDetails().getMyUndiscountedUtil();
 		utility_b = agentBhistory.getBestBidDetails().getMyUndiscountedUtil(); 
-		
-		//System.out.format("\nBest Bid made by agent A is %f\n", utility_a);
-		//System.out.format("\nBest Bid made by agent B is %f\n", utility_b);
-		
 		avg_utility = ((utility_a + utility_b) /2)*(1+percent_increase);
-	      
 		return outcome_space.getBidNearUtility(avg_utility).getBid();
 	}
 	
