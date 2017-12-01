@@ -1,7 +1,5 @@
 negotiator.parties.ConcederNegotiationParty
-agents.anac.y2015.AresParty.AresParty
 agents.anac.y2016.agenthp2.AgentHP2_main
-agents.anac.y2016.agentlight.AgentLight
 agents.anac.y2016.atlas3.Atlas32016
 agents.anac.y2016.caduceus.Caduceus
 agents.anac.y2016.pars2.ParsAgent2
@@ -9,6 +7,11 @@ agents.anac.y2016.syagent.SYAgent
 agents.anac.y2016.terra.Terra
 agents.anac.y2016.yxagent.YXAgent
 agents.anac.y2016.parscat.ParsCat
-agents.anac.y2015.cuhkagent2015.CUHKAgent2015
+agents.anac.y2015.ParsAgent.ParsAgent
 negotiator.parties.BoulwareNegotiationParty
 agents.anac.y2016.agentsmith.AgentSmith2016
+agents.anac.y2016.grandma.GrandmaAgent
+agents.anac.y2016.clockworkagent.ClockworkAgent
+agents.anac.y2015.pokerface.PokerFace
+agents.anac.y2015.TUDMixedStrategyAgent.TUDMixedStrategyAgent
+agents.anac.y2014.TUDelftGroup2.Group2Agent
