@@ -265,6 +265,7 @@ public class Agent26 extends AbstractNegotiationParty {
     public Bid generateBid(){
     		//Traverse all issues on the Bid ...
            	double max_value , curr_value ,randr;
+		double curr_time;
            	int max_value_idx , num_values , issue_idx;
            	Random randomnr = new Random();
            	Bid generated_bid;
@@ -273,6 +274,9 @@ public class Agent26 extends AbstractNegotiationParty {
            	generated_bid = null;
            	int agent_max_val_idx , agent_max_val , curr_max_agent_value;
            	randr =0;
+
+		curr_time = getTimeLine().getTime();
+		
            	for(Issue lIssue : domain_issues) {
            		num_values = 0 ;
            		issue_idx = 1;
@@ -299,10 +303,10 @@ public class Agent26 extends AbstractNegotiationParty {
           
            		//Throw a coin on the re-normalized weight ...
 			if(additiveUtilitySpace_i.getWeight(lIssue.getNumber()) != max_weight){
-			    if(Math.random() >   (1.5 - getTimeLine().getTime()) *  (additiveUtilitySpace_i.getWeight(lIssue.getNumber())  - min_weight )/ (max_weight - min_weight)) 
+			    if(Math.random() >   (1.5 - curr_time ) *  (additiveUtilitySpace_i.getWeight(lIssue.getNumber())  - min_weight )/ (max_weight - min_weight)) 
            		{
            			randr = Math.random();
-           			if( randr < 1/3){
+           			if( randr < ((curr_time + 2.0)/ 6.0)){
         			   //get the max value idx from the freq array of agent ...
         			   agent_max_val = 0;
         			   agent_max_val_idx = 0;
@@ -316,7 +320,7 @@ public class Agent26 extends AbstractNegotiationParty {
         			   selected_value = agent_max_val_idx;
         		   }
           
-        		   else if (randr > 1/3 && randr < 2/3){
+				else if (randr > ((curr_time + 2.0)/ 6.0)  && randr < (curr_time + 2.0 )/ 3.0){
         			   agent_max_val = 0;
         			   agent_max_val_idx = 0;
         			   for(int j = 0; j < lIssueDiscrete.getNumberOfValues() ; j++){
