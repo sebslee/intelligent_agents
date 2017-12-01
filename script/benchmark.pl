@@ -30,10 +30,10 @@ if($help){
 my $num_of_agents;
 my  $random_agent_1;
 my  $random_agent_2;
-my $agent_path;
+#my $agent_path;
 my $domain;
 my $it;
-my $our_agent;
+#my $our_agent;
 
 #This stuff is global ..
 my $global_utility;
