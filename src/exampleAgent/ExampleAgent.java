@@ -37,30 +37,30 @@ public class ExampleAgent extends AbstractNegotiationParty {
     public Action chooseAction(List<Class<? extends Action>> list) {
         // According to Stacked Alternating Offers Protocol list includes
         // Accept, Offer and EndNegotiation actions only.
-        double time = getTimeLine().getTime(); // Gets the time, running from t = 0 (start) to t = 1 (deadline).
+        //double time = getTimeLine().getTime(); // Gets the time, running from t = 0 (start) to t = 1 (deadline).
                                                // The time is normalized, so agents need not be
                                                // concerned with the actual internal clock.
 
 
         // First half of the negotiation offering the max utility (the best agreement possible) for Example Agent
-        if (time < 0.5) {
+        //if (time < 0.5) {
             return new Offer(this.getPartyId(), this.getMaxUtilityBid());
-        } else {
+       // } else {
 
             // Accepts the bid on the table in this phase,
             // if the utility of the bid is higher than Example Agent's last bid.
-            if (lastReceivedOffer != null
-                && myLastOffer != null
-                && this.utilitySpace.getUtility(lastReceivedOffer) > this.utilitySpace.getUtility(myLastOffer)) {
+         //   if (lastReceivedOffer != null
+          //      && myLastOffer != null
+           //     && this.utilitySpace.getUtility(lastReceivedOffer) > this.utilitySpace.getUtility(myLastOffer)) {
 
-                return new Accept(this.getPartyId(), lastReceivedOffer);
-            } else {
+             //   return new Accept(this.getPartyId(), lastReceivedOffer);
+            //} else {
                 // Offering a random bid
-                myLastOffer = generateRandomBid();
-                return new Offer(this.getPartyId(), myLastOffer);
+              //  myLastOffer = generateRandomBid();
+              //  return new Offer(this.getPartyId(), myLastOffer);
             }
-        }
-    }
+       // }
+   // }
 
     /**
      * This method is called to inform the party that another NegotiationParty chose an Action.
