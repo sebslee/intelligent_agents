@@ -145,13 +145,13 @@ public class Agent26 extends AbstractNegotiationParty {
     		return new Offer(this.getPartyId(), myLastOffer);
     	}
     	
-        //Every now and then just offer our maximum, depending on time..
-        if(Math.random() > getTimeLine().getTime() + 0.3){
+	  //Every now and then just offer our maximum, depending on time..
+	 if(Math.random() > getTimeLine().getTime() + 0.3){
             	//myLastOffer = this.getMaxUtilityBid();
         		//System.out.println("\nOffering Maximum Utility Bid");
         		//System.out.format("\nMaximum Utility is %f\n", this.utilitySpace.getUtility(maxUtilityOffer));
     	        return new Offer(this.getPartyId(), maxUtilityOffer);
-        }
+		}
   
         // Compute the target utility
         double util;
@@ -303,10 +303,10 @@ public class Agent26 extends AbstractNegotiationParty {
           
            		//Throw a coin on the re-normalized weight ...
 			if(additiveUtilitySpace_i.getWeight(lIssue.getNumber()) != max_weight){
-			    if(Math.random() >   (1.5 - curr_time ) *  (additiveUtilitySpace_i.getWeight(lIssue.getNumber())  - min_weight )/ (max_weight - min_weight)) 
+			    if(Math.random() >   (1.3 - curr_time ) *  (additiveUtilitySpace_i.getWeight(lIssue.getNumber())  - min_weight )/ (max_weight - min_weight)) 
            		{
            			randr = Math.random();
-           			if( randr < ((curr_time + 2.0)/ 6.0)){
+           			if( randr < (3/8)){
         			   //get the max value idx from the freq array of agent ...
         			   agent_max_val = 0;
         			   agent_max_val_idx = 0;
@@ -320,7 +320,7 @@ public class Agent26 extends AbstractNegotiationParty {
         			   selected_value = agent_max_val_idx;
         		   }
           
-				else if (randr > ((curr_time + 2.0)/ 6.0)  && randr < (curr_time + 2.0 )/ 3.0){
+				else if (randr > (3/8)  && randr < (6/8)){
         			   agent_max_val = 0;
         			   agent_max_val_idx = 0;
         			   for(int j = 0; j < lIssueDiscrete.getNumberOfValues() ; j++){
@@ -341,7 +341,8 @@ public class Agent26 extends AbstractNegotiationParty {
         	   
         	   else {
         		   selected_value = max_value_idx;
-        	   }}
+        	   }
+			}
 		  else {
         		   selected_value = max_value_idx;
         	   }	
