@@ -81,7 +81,7 @@ public class Agent26 extends AbstractNegotiationParty {
         Umax = 1.0;
         Umin = (this.utilitySpace.getUtility(minUtilityOffer)+Umax)/2.0;
         k = 0.2;
-        b = 0.3;
+        b = 0.1;
         percent_increase = 0.05;
         
         // Get the Domain Issues
@@ -109,6 +109,7 @@ public class Agent26 extends AbstractNegotiationParty {
         	}	
         	if(values.size() > max_num_of_values){
         		max_num_of_values = values.size();
+			
         		//System.out.format("New maximum value of values %d \n", max_num_of_values);
         	}
         	for (ValueDiscrete value : values) {
@@ -146,7 +147,7 @@ public class Agent26 extends AbstractNegotiationParty {
     	}
     	
 	  //Every now and then just offer our maximum, depending on time..
-	 if(Math.random() > getTimeLine().getTime() + 0.3){
+	 if(Math.random() > getTimeLine().getTime() + 0.7){
             	//myLastOffer = this.getMaxUtilityBid();
         		//System.out.println("\nOffering Maximum Utility Bid");
         		//System.out.format("\nMaximum Utility is %f\n", this.utilitySpace.getUtility(maxUtilityOffer));
@@ -198,12 +199,12 @@ public class Agent26 extends AbstractNegotiationParty {
             if(sender.hashCode() == hashcode_a){
             	// Store the offer in Agent A's History and Update the Frequencies
             	//agentAhistory.add(lastReceivedOfferDetails);
-            	update_freq(lastReceivedOffer , 1);
+            	update_freq(lastReceivedOffer , 0);
             }
             else if(sender.hashCode() == hashcode_b){
             	// Store the offer in Agent B's History
             	//agentBhistory.add(lastReceivedOfferDetails);
-		update_freq(lastReceivedOffer , 0);
+		update_freq(lastReceivedOffer , 1);
         	}
 		}
     }
@@ -253,11 +254,13 @@ public class Agent26 extends AbstractNegotiationParty {
     	for(Issue lIssue : bid_issues){
     		lIssueDiscrete = (IssueDiscrete)  lIssue; //current issue
     		issue_values  = lIssueDiscrete.getValues();     
-    		//System.out.format("Issue %s\n" , lIssue.convertToString());
+    		System.out.format("Issue %s\n" , lIssue.convertToString());
     		for (ValueDiscrete value : issue_values) {
     			value_index = lIssueDiscrete.getValueIndex(value.getValue());
-    			//System.out.format("Value %s Index %d Frequency %d \n", value.getValue() , value_index , freq_a[issue_idx][value_index]);
+    			System.out.format("FREQ A Value %s Index %d Frequency %d \n\n", value.getValue() , value_index , freq_a[issue_idx][value_index]);
+    			System.out.format("FREQ B Value %s Index %d Frequency %d \n\n", value.getValue() , value_index , freq_b[issue_idx][value_index]);			
     		}
+		
     		issue_idx ++;
     	}
     }
@@ -279,7 +282,7 @@ public class Agent26 extends AbstractNegotiationParty {
 		
            	for(Issue lIssue : domain_issues) {
            		num_values = 0 ;
-           		issue_idx = 1;
+           		issue_idx = 0;
            		//System.out.format("MR BEAN INIT: %s number %d \n", .getName() , Element.getNumber() );
            		max_value = 0;
            		max_value_idx = 0;
@@ -303,24 +306,27 @@ public class Agent26 extends AbstractNegotiationParty {
           
            		//Throw a coin on the re-normalized weight ...
 			if(additiveUtilitySpace_i.getWeight(lIssue.getNumber()) != max_weight){
-			    if(Math.random() >   (1.3 - curr_time ) *  (additiveUtilitySpace_i.getWeight(lIssue.getNumber())  - min_weight )/ (max_weight - min_weight)) 
+			    if(Math.random() >   (additiveUtilitySpace_i.getWeight(lIssue.getNumber())  - min_weight )/ (max_weight - min_weight)) 
            		{
            			randr = Math.random();
-           			if( randr < (3/8)){
+           			if( randr < (0.5)){
         			   //get the max value idx from the freq array of agent ...
         			   agent_max_val = 0;
         			   agent_max_val_idx = 0;
         			   for(int j = 0; j < lIssueDiscrete.getNumberOfValues() ; j++){
+
         				   curr_max_agent_value = freq_a [issue_idx][j];
         				   if(curr_max_agent_value > agent_max_val){
         					   agent_max_val = curr_max_agent_value;
         					   agent_max_val_idx = j;
         				   }
         			   }
+
         			   selected_value = agent_max_val_idx;
+				   // System.out.format("\nAgen26: Conceiding Issue %s for agent A value %d \n", lIssue.getName(), selected_value );				   			   
         		   }
           
-				else if (randr > (3/8)  && randr < (6/8)){
+				else {
         			   agent_max_val = 0;
         			   agent_max_val_idx = 0;
         			   for(int j = 0; j < lIssueDiscrete.getNumberOfValues() ; j++){
@@ -330,13 +336,17 @@ public class Agent26 extends AbstractNegotiationParty {
         					   agent_max_val_idx = j;
         				   }
         			   }
+				   
         			   selected_value = agent_max_val_idx;
+				   // System.out.format("Agen26: Conceiding Issue %s for agent B value %d \n", lIssue.getName(), selected_value );
         		   }
         		   
-        		   else {          
+				//else {          
         			   //chose random value ...
-        			   selected_value = randomnr.nextInt(num_values);
-        		   }          
+
+				// selected_value = randomnr.nextInt(num_values);
+			       	//			   System.out.format("Agen26: Pick random issue %d \n", selected_value );				   
+				//}          
 			}
         	   
         	   else {
