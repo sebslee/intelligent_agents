@@ -309,7 +309,7 @@ public class Agent26 extends AbstractNegotiationParty {
 	public void receiveMessage(AgentID sender, Action act) {
 
 		super.receiveMessage(sender, act);
-		BidDetails lastReceivedOfferDetails;
+		//BidDetails lastReceivedOfferDetails;
 		// System.out.format(" TIME %f\n",getTimeLine().getTime() );
 
 
@@ -344,9 +344,9 @@ public class Agent26 extends AbstractNegotiationParty {
 			lastReceivedOffer = offer.getBid();
 			//System.out.format("\nReceived Offer with Utility %f from Agent %s\n", 
 			//this.utilitySpace.getUtility(lastReceivedOffer), offer.getAgent().getName());
-			lastReceivedOfferDetails = new BidDetails(lastReceivedOffer, 
-					this.utilitySpace.getUtility(lastReceivedOffer), 
-					getTimeLine().getTime());
+			//lastReceivedOfferDetails = new BidDetails(lastReceivedOffer, 
+			//		this.utilitySpace.getUtility(lastReceivedOffer), 
+			//		getTimeLine().getTime());
 			if(sender.hashCode() == hashcode_a){
 				// Store the offer in Agent A's History and Update the Frequencies
 				//agentAhistory.add(lastReceivedOfferDetails);
