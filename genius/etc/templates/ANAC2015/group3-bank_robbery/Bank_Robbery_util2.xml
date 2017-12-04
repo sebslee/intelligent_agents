@@ -1,36 +1,36 @@
 <utility_space> 
-<objective index="0" description="" name="Bank Robbery" type="objective" etype="objective"> 
-<issue index="1" name="Roles" vtype="discrete" type="discrete" etype="discrete"> 
-<item index="1" value="Driver" evaluation="3"> 
+<objective name="Bank Robbery" index="0" description="" etype="objective" type="objective"> 
+<issue vtype="discrete" name="Roles" index="1" etype="discrete" type="discrete"> 
+<item evaluation="3.0" index="1" value="Driver"> 
 </item> 
-<item index="2" value="Hostage Taker" evaluation="4"> 
+<item evaluation="4.0" index="2" value="Hostage Taker"> 
 </item> 
-<item index="3" value="Money Grabber" evaluation="3"> 
-</item> 
-</issue> 
-<issue index="2" name="Escape Plan" vtype="discrete" type="discrete" etype="discrete"> 
-<item index="1" value="Car" evaluation="3"> 
-</item> 
-<item index="2" value="Hellicopter" evaluation="6"> 
-</item> 
-<item index="3" value="Horse" evaluation="1"> 
+<item evaluation="3.0" index="3" value="Money Grabber"> 
 </item> 
 </issue> 
-<issue index="3" name="Money Split" vtype="discrete" type="discrete" etype="discrete"> 
-<item index="1" value="Proportional to Performance" evaluation="6"> 
+<issue vtype="discrete" name="Escape Plan" index="2" etype="discrete" type="discrete"> 
+<item evaluation="3.0" index="1" value="Car"> 
 </item> 
-<item index="2" value="Equally" evaluation="4"> 
+<item evaluation="6.0" index="2" value="Hellicopter"> 
+</item> 
+<item evaluation="1.0" index="3" value="Horse"> 
 </item> 
 </issue> 
-<weight index="1" value="0.29814081547056365"> 
+<issue vtype="discrete" name="Money Split" index="3" etype="discrete" type="discrete"> 
+<item evaluation="6.0" index="1" value="Proportional to Performance"> 
+</item> 
+<item evaluation="4.0" index="2" value="Equally"> 
+</item> 
+</issue> 
+<weight index="1" value="0.29901415632791106"> 
 </weight> 
-<weight index="2" value="0.19613782664383334"> 
+<weight index="2" value="0.1988757942791456"> 
 </weight> 
-<weight index="3" value="0.495"> 
+<weight index="3" value="0.5021100493929433"> 
 </weight> 
 </objective> 
 <discount_factor value="1.0"> 
 </discount_factor> 
-<reservation value="0.2"> 
+<reservation value="0.0"> 
 </reservation> 
 </utility_space> 

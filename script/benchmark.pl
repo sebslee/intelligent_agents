@@ -1,6 +1,7 @@
 #!/usr/bin/perl
 
 use Getopt::Long;
+#use warnings;
 
 GetOptions ("agent=s" => \$our_agent,    
 	    "agent_path=s"   => \$agent_path,      
@@ -79,19 +80,24 @@ if(!$agent_path){
     $agent_path = "/home/sleebarr/EMECS_SOTON/Intelligent_Agents/project/intelligent_agents/src/MrBeanFusion/MrBeanFusion.class";
 }
 
+#File handles
+my $CUSTOM_TOURNAMENT;
+my $OUTFILE;
+my $LOG;
 
 print ("\nI: Benchmarking tool starting ...\n");
 print ("I: Benchmark agent : $our_agent ...\n");
 print ("I: Agent path : $agent_path ...\n");
 print ("I: Number of tournaments : $number_of_tournaments ...\n");
 print ("I: Negotiations per tournament : $nego_per_tournament ...\n");
-
-for($it = 0 ; $it < $number_of_tournaments ; $it++){
+open ( $CUSTOM_TOURNAMENT , "<" , "multiparty_custom_tournament.xml");
+for(my $it = 0 ; $it < $number_of_tournaments ; $it++){
     $random_agent_1 = $agents [int (rand($num_of_agents-1)) + 1];
     $random_agent_2 =  $agents [int (rand($num_of_agents-1)) + 1];
-    open ( CUSTOM_TOURNAMENT , "<" , "multiparty_custom_tournament.xml");
-    open ( OUTFILE , ">" , "multiparty_custom_tournament_gen.xml") or die;
-    @lines = <CUSTOM_TOURNAMENT>;
+    open ( $CUSTOM_TOURNAMENT , "<" , "multiparty_custom_tournament.xml");
+    print "I: Opening file multiparty_custom_tournament_gen_$it.xml\n";
+    open ( $OUTFILE ,  '>', "multiparty_custom_tournament_gen_$it.xml"  ) or die;
+    @lines = <$CUSTOM_TOURNAMENT>;
     $size = @lines;
     chomp($random_agent_1);
     chomp($random_agent_2);
@@ -100,122 +106,105 @@ for($it = 0 ; $it < $number_of_tournaments ; $it++){
     print ("I: Random agent 2 : $random_agent_2\n");
 
     $domain = int (rand($num_of_domains));
-    
-    if($domain == 0){
-	print ("I: Running with party domain ...\n");
-    }
-    elsif($domain == 1){
-	print ("I: Running with University domain ...\n");
-    }
-    elsif($domain == 2){
-	print ("I: Running with politics domain ...\n");
-    }
-    elsif($domain == 3){
-	print ("I: Running with Japan trip domain ...\n");
-    }
-    elsif($domain == 4){
-	print ("I: Running with  Bank Robery domain ...\n");
-    }
-    elsif($domain == 5){
-	print ("I: Running with smart grid domain ...\n");
-    } 
-    elsif($domain == 6){
-	print ("I: Running with PEenergy domain ...\n");
-    }      
-    elsif($domain == 7){
-	print ("I: Running SportHall domain ...\n");
-    }       
 
     for( $i = 0  ; $i < $size ; $i++){
 	if($lines[$i] =~ /<partyRepItems/){
-	    print  OUTFILE $lines[$i];
+	    print  $OUTFILE $lines[$i];
 	    $i++;
-	    print OUTFILE "\t\t<party classPath=".'"'.$agent_path.'">';
+	    print $OUTFILE "\t\t<party classPath=".'"'.$agent_path.'">';
 	    $i++;
-	    print OUTFILE $lines[$i];
+	    print $OUTFILE $lines[$i];
 	    $i++;
-	    print OUTFILE $lines[$i];
+	    print $OUTFILE $lines[$i];
 	    $i++;
-	    print OUTFILE "\t\t<party classPath=".'"'.$random_agent_1.'">';
+	    print $OUTFILE "\t\t<party classPath=".'"'.$random_agent_1.'">';
 	    $i++;
-	    print OUTFILE $lines[$i];
+	    print $OUTFILE $lines[$i];
 	    $i++;
-	    print OUTFILE $lines[$i];	
+	    print $OUTFILE $lines[$i];	
 	    $i++;
-	    print OUTFILE "\t\t<party classPath=".'"'.$random_agent_2.'">';	
+	    print $OUTFILE "\t\t<party classPath=".'"'.$random_agent_2.'">';	
 	}
 	elsif ($lines[$i] =~ /<partyProfileItems/){
 	    if($domain == 0) {
-		print  OUTFILE $lines[$i];
+		print ("I: Running with party domain ...\n");
+		print  $OUTFILE $lines[$i];
 		$i++;
-		print OUTFILE '<item url="file:etc/templates/partydomain/party1_utility.xml" />' ;
+		print $OUTFILE '<item url="file:etc/templates/partydomain/party1_utility.xml" />'."\n" ;
 		$i++;
-		print OUTFILE '<item url="file:etc/templates/partydomain/party2_utility.xml" />' ;
+		print $OUTFILE '<item url="file:etc/templates/partydomain/party2_utility.xml" />'."\n" ;
 		$i++;
-		print OUTFILE '<item url="file:etc/templates/partydomain/party3_utility.xml" />' ;	
+		print $OUTFILE '<item url="file:etc/templates/partydomain/party3_utility.xml" />'."\n" ;	
 	    } 	
 	    elsif($domain == 1) {
-		print  OUTFILE $lines[$i];
+		print ("I: Running with university domain  ...\n");
+		print  $OUTFILE $lines[$i];
 		$i++;
-		print OUTFILE '<item url="file:etc/templates/ANAC2015/group1-university/University_util1.xml" />' ;
+		print $OUTFILE '<item url="file:etc/templates/ANAC2015/group1-university/University_util1.xml" />'."\n" ;
 		$i++;
-		print OUTFILE '<item url="file:etc/templates/ANAC2015/group1-university/University_util2.xml" />' ;
+		print $OUTFILE '<item url="file:etc/templates/ANAC2015/group1-university/University_util2.xml" />'."\n" ;
 		$i++;
-		print OUTFILE '<item url="file:etc/templates/ANAC2015/group1-university/University_util3.xml" />' ;	
+		print $OUTFILE '<item url="file:etc/templates/ANAC2015/group1-university/University_util3.xml" />'."\n" ;	
 	    }
 	    elsif($domain == 2) {
-		print  OUTFILE $lines[$i];
+		print ("I: Running with  politics domain ...\n");
+		print  $OUTFILE $lines[$i];
 		$i++;
-		print OUTFILE '<item url="file:etc/templates/ANAC2015/group2-politics/Politics_util1.xml" />' ;
+		print $OUTFILE '<item url="file:etc/templates/ANAC2015/group2-politics/Politics_util1.xml" />'."\n" ;
 		$i++;
-		print OUTFILE '<item url="file:etc/templates/ANAC2015/group2-politics/Politics_util2.xml" />' ;
+		print $OUTFILE '<item url="file:etc/templates/ANAC2015/group2-politics/Politics_util2.xml" />'."\n" ;
 		$i++;
-		print OUTFILE '<item url="file:etc/templates/ANAC2015/group2-politics/Politics_util3.xml" />' ;	
+		print $OUTFILE '<item url="file:etc/templates/ANAC2015/group2-politics/Politics_util3.xml" />'."\n" ;	
 	    }
 	    elsif($domain == 3) {
-		print  OUTFILE $lines[$i];
+		print ("I: Running with japan trip... WARNING: Modify this domain to make the reservation value and discount 0!\n");
+		print  $OUTFILE $lines[$i];
 		$i++;
-		print OUTFILE '<item url="file:etc/templates/ANAC2016/SYAgent/JapanTrip_util1.xml" />' ;
+		print $OUTFILE '<item url="file:etc/templates/ANAC2016/SYAgent/JapanTrip_util1.xml" />'."\n" ;
 		$i++;
-		print OUTFILE '<item url="file:etc/templates/ANAC2016/SYAgent/JapanTrip_util2.xml" />' ;
+		print $OUTFILE '<item url="file:etc/templates/ANAC2016/SYAgent/JapanTrip_util2.xml" />'."\n" ;
 		$i++;
-		print OUTFILE '<item url="file:etc/templates/ANAC2016/SYAgent/JapanTrip_util3.xml" />' ;	
+		print $OUTFILE '<item url="file:etc/templates/ANAC2016/SYAgent/JapanTrip_util3.xml" />'."\n" ;	
 	    }
 	    elsif($domain == 4) {
-		print  OUTFILE $lines[$i];
+		print ("I: Running with bank robbery domain WARNING: Modify this domain to make the reservation value and discount 0! ...\n");
+		print  $OUTFILE $lines[$i];
 		$i++;
-		print OUTFILE '<item url="file:etc/templates/ANAC2015/group3-bank_robbery/Bank_Robbery_util1.xml" />' ;
+		print $OUTFILE '<item url="file:etc/templates/ANAC2015/group3-bank_robbery/Bank_Robbery_util1.xml" />'."\n" ;
 		$i++;
-		print OUTFILE '<item url="file:etc/templates/ANAC2015/group3-bank_robbery/Bank_Robbery_util2.xml" />' ;
+		print $OUTFILE '<item url="file:etc/templates/ANAC2015/group3-bank_robbery/Bank_Robbery_util2.xml" />'."\n" ;
 		$i++;
-		print OUTFILE '<item url="file:etc/templates/ANAC2015/group3-bank_robbery/Bank_Robbery_util3.xml" />' ;	
+		print $OUTFILE '<item url="file:etc/templates/ANAC2015/group3-bank_robbery/Bank_Robbery_util3.xml" />'."\n" ;	
 	    }
 	    elsif($domain == 5) {
-		print  OUTFILE $lines[$i];
+		print ("I: Running with smart domain inner ...\n");
+		print  $OUTFILE $lines[$i];
 		$i++;
-		print OUTFILE '<item url="file:etc/templates/ANAC2016/Caduceus/Smart_Grid_util1.xml" />' ;
+		print $OUTFILE '<item url="file:etc/templates/ANAC2016/Caduceus/Smart_Grid_util1.xml" />'."\n" ;
 		$i++;
-		print OUTFILE '<item url="file:etc/templates/ANAC2016/Caduceus/Smart_Grid_util2.xml" />' ;
+		print $OUTFILE '<item url="file:etc/templates/ANAC2016/Caduceus/Smart_Grid_util2.xml" />'."\n" ;
 		$i++;
-		print OUTFILE '<item url="file:etc/templates/ANAC2016/Caduceus/Smart_Grid_util3.xml" />' ;	
+		print $OUTFILE '<item url="file:etc/templates/ANAC2016/Caduceus/Smart_Grid_util3.xml" />'."\n" ;	
 	    }
 	    elsif($domain == 6) {
-		print  OUTFILE $lines[$i];
+		print ("I: Running with Penergy domain inner ...\n");
+		print  $OUTFILE $lines[$i];
 		$i++;
-		print OUTFILE '<item url="file:etc/templates/ANAC2016/parsAgent2/PEnergy_util1.xml" />' ;
+		print $OUTFILE '<item url="file:etc/templates/ANAC2016/parsAgent2/PEnergy_util1.xml" />'."\n" ;
 		$i++;
-		print OUTFILE '<item url="file:etc/templates/ANAC2016/parsAgent2/PEnergy_util2.xml" />' ;
+		print $OUTFILE '<item url="file:etc/templates/ANAC2016/parsAgent2/PEnergy_util2.xml" />'."\n" ;
 		$i++;
-		print OUTFILE '<item url="file:etc/templates/ANAC2016/parsAgent2/PEnergy_util3.xml" />' ;	
+		print $OUTFILE '<item url="file:etc/templates/ANAC2016/parsAgent2/PEnergy_util3.xml" />'."\n" ;	
 	    }	 
 	    elsif($domain == 7) {
-		print  OUTFILE $lines[$i];
+		print ("I: Running with new sporthal domain inner ...\n");
+		print  $OUTFILE $lines[$i];
 		$i++;
-		print OUTFILE '<item url="file:etc/templates/ANAC2015/group2-new_sporthal/New_sporthal_util1.xml" />' ;
+		print $OUTFILE '<item url="file:etc/templates/ANAC2015/group2-new_sporthal/New_sporthal_util1.xml" />'."\n" ;
 		$i++;
-		print OUTFILE '<item url="file:etc/templates/ANAC2015/group2-new_sporthal/New_sporthal_util2.xml" />' ;
+		print $OUTFILE '<item url="file:etc/templates/ANAC2015/group2-new_sporthal/New_sporthal_util2.xml" />'."\n" ;
 		$i++;
-		print OUTFILE '<item url="file:etc/templates/ANAC2015/group2-new_sporthal/New_sporthal_util1.xml" />' ;	
+		print $OUTFILE '<item url="file:etc/templates/ANAC2015/group2-new_sporthal/New_sporthal_util1.xml" />'."\n" ;	
 	    }	
 	    
 	    
@@ -223,34 +212,38 @@ for($it = 0 ; $it < $number_of_tournaments ; $it++){
 	    
 	}
 	else{
-	    print OUTFILE  ($lines[$i]);
+	    print $OUTFILE  ($lines[$i]);
 	}    
     }
 
-    close OUTFILE;
-    close CUSTOM_TOURNAMENT;
+    #close $OUTFILE or die;
+    #close $CUSTOM_TOURNAMENT or die;
 
     print ("I: Initializing tournament ....\n");
 
     chdir "../genius";
+    
+    my $cmd = ("java -cp negosimulator.jar negotiator.xml.multipartyrunner.Runner ../script/multiparty_custom_tournament_gen_$it.xml log/tournament_$it.xml");
 
-    system("java -cp negosimulator.jar negotiator.xml.multipartyrunner.Runner ../script/multiparty_custom_tournament_gen.xml log/tournament_$it.xml");
+    print ("I: Running genius with command : $cmd ....\n");
+    
+    system("java -cp negosimulator.jar negotiator.xml.multipartyrunner.Runner ../script/multiparty_custom_tournament_gen_$it.xml log/tournament_$it.xml");
 
     print ("I: Tournament done parsing information ....\n");
+    print ("I: Opening file log/tournament_$it.xml.csv ....\n");
+    open ($LOG , "<" , "log/tournament_$it.xml.csv") or die;
 
-    open (LOG , "<" , "log/tournament_$it.xml.csv") or die;
-
-    @lines = <LOG>;
+    @lines = <$LOG>;
 
     $lines = @lines;
 
     my @fields;
 
-    my $agent_1 , $agent_2 , $agent_3;
-    my $util_1 , $util_2 , $util_3;
+    my ($agent_1 , $agent_2 , $agent_3);
+    my ($util_1 , $util_2 , $util_3);
     my $failed_negotiations;
-    my $our_agent_number , $our_agent_utility;
-    my $avg_utility , $nash_distance ,  $avg_nash , $avg_pareto , $pareto_distance;
+    my ($our_agent_number , $our_agent_utility);
+    my ($avg_utility , $nash_distance ,  $avg_nash , $avg_pareto , $pareto_distance);
     my $number_of_wins;
     $failed_negotiations = 0;
     
@@ -260,6 +253,7 @@ for($it = 0 ; $it < $number_of_tournaments ; $it++){
     $number_of_wins = 0;
 
     my $curr_util, $max_util;
+    
     for ($i = 2 ; $i < $lines ; $i++){
 	$max_util = 0;   
 	chomp($lines[$i]); 
@@ -288,15 +282,8 @@ for($it = 0 ; $it < $number_of_tournaments ; $it++){
 	    $our_agent_utility = $util_3;
 	} 
 
-	if($util_1 > $util2 && $util_1 > $util_3){
-	    $max_util = $util_1;
-	}
-	elsif($util_2 > $util1 && $util_2 > $util_3){
-	    $max_util = $util_2;
-	}
-	elsif($util_3 >= $util1 && $util_3 >= $util_2){
-	    $max_util = $util_3;
-	}
+        $max_util = $fields[8];
+	
 	print ("@ $i $our_agent utility: $our_agent_utility max utility : $max_util \n ");
 
 	if(($our_agent_utility == $max_util) && $max_util != 0){
@@ -333,6 +320,7 @@ Failed negotiations : $failed_negotiations \n
     $global_pareto_distance += $avg_pareto;
     $global_wins += $number_of_wins;
     $global_fails += $failed_negotiations;
+        chdir "../script";
 }
 
 $global_utility  = $global_utility / $number_of_tournaments;
@@ -349,5 +337,6 @@ print ("\n SUMMARY \n
            Wins : $global_wins % \n 
            Failed Negotiations : $global_fails % \n");
 
-
+close $OUTFILE;
+close $CUSTOM_TOURNAMENT;
 __END__
