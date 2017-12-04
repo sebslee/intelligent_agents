@@ -72,9 +72,13 @@ public class Agent26v2 extends AbstractNegotiationParty {
 					value_ranking[j] = N_values-j;
 					k = j - 1;
 					while(k != -1) {
-						if(frequency[i][j] >= frequency[i][k]) {
-							value_ranking[k] = Math.max(value_ranking[k], value_ranking[j]);
+						if(frequency[i][j] > frequency[i][k]) {
+							value_ranking[j]++;
 							value_ranking[k]--;
+						}
+						if(frequency[i][j] == frequency[i][k]) {
+							value_ranking[k]--;
+							value_ranking[j] = Math.min(value_ranking[k], value_ranking[j]);
 						}
 						k--;
 					}
