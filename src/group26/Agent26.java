@@ -24,12 +24,95 @@ import negotiator.issue.*;
 import negotiator.utility.*;
 import negotiator.utility.EvaluatorDiscrete;
 import java.util.Random;
+//import negotiator.boaframework.OpponentModel;
 
-
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import org.apache.commons.lang.ArrayUtils;
 
 public class Agent26 extends AbstractNegotiationParty {
 
-    private final String description = "MrBeanFusion_offer";
+
+    private class OpponentModel {
+	private double Issues [][];
+	private double Weights [];
+	public int frequency [][];
+	private int N_issues;
+	private int N_values;
+	private double maximum_freqs [];
+	private double freq_sum;
+	private List<Issue> domain; 
+	private List<ValueDiscrete> values;
+		
+	public OpponentModel(int num_issues, int num_values, int [][] freq, List<Issue> domain_issues) {
+	    Issues = new double [num_issues][num_values];
+	    Weights = new double [num_issues];
+	    frequency = freq;
+	    N_issues = num_issues;
+	    N_values = num_values;
+	    maximum_freqs = new double [N_issues];
+	    freq_sum = 0.0;
+	    domain = domain_issues;
+	}
+		
+	public void updateModel() {
+	    //System.out.println("");
+	    freq_sum = 0.0;
+	    for(int i = 0; i < N_issues; i++) {
+		maximum_freqs[i] = Collections.max(Arrays.asList(ArrayUtils.toObject(frequency[i])));
+		if(maximum_freqs[i] == 0) {
+		    maximum_freqs[i] = 1;
+		}
+		freq_sum = freq_sum + maximum_freqs[i];
+		//System.out.format("\nIndex %d, Maximum Frequency = %f\n", i, maximum_freqs[i]);
+		for(int j = 0; j < N_values; j++) {
+		    Issues[i][j] = frequency[i][j]/maximum_freqs[i];
+		    //System.out.format("\nValue %d, Predicted Evaluation = %f\n", j, Issues[i][j]);
+		}
+	    }
+	    for(int i = 0; i < N_issues; i++) {
+		Weights[i] = maximum_freqs[i]/freq_sum;
+		//System.out.format("\nIndex %d, Normalized Weight = %f\n", i, Weights[i]);
+	    }
+	    //System.out.println("*******************************\n");
+	}
+		
+	public double predictUtility(Bid bid) {
+	    double U = 0.0;
+	    for(Issue issue: bid.getIssues()) {
+		U = U + 
+		    Issues[issue.getNumber()-1][((IssueDiscrete) issue).getValueIndex((ValueDiscrete)(bid.getValue(issue.getNumber())))]*Weights[issue.getNumber()-1];
+	    }
+	    //System.out.format("\n\nPredicted utility = %f", U);
+	    return U;
+	}
+		
+	public int getIssueMaxValueIndex(int issue_index) {
+	    int max_index = 0;
+	    for(int i = 0; i < N_values; i++) {
+		if(Issues[issue_index][max_index] < Issues[issue_index][i]) {
+		    max_index = i;
+		}
+	    }
+	    return max_index;
+	}
+		
+	public double getIssueValue(int issue_index, int value_index) {
+	    return Issues[issue_index][value_index];
+	}
+		
+	public double getWeight(int issue_index) {
+	    return Weights[issue_index];
+	}
+    };
+
+    private OpponentModel opponentA;
+    private OpponentModel opponentB;
+	
+
+
+    private final String description = "Agent 26";
 
     private Bid lastReceivedOffer; // offer on the table
     private Bid myLastOffer;
@@ -47,9 +130,14 @@ public class Agent26 extends AbstractNegotiationParty {
     
     private int hashcode_a;
     private int hashcode_b;
+    private int number_of_issues; // introduced this to aid in simulated annealing process ..
     
     private BidHistory agentAhistory ;
     private BidHistory agentBhistory ;
+
+    //private OpponentModel OpponentModelA;
+    
+    Bid curr_bid ;
     
     private java.util.List<Issue> domain_issues; 
     private java.util.List<ValueDiscrete> values;
@@ -72,6 +160,7 @@ public class Agent26 extends AbstractNegotiationParty {
         // Initialize the Agent's histories and the hashcodes to 0
         hashcode_a = 0;
         hashcode_b = 0;
+	curr_bid = this.getMaxUtilityBid(); 
         //agentAhistory= new BidHistory();
         //agentBhistory = new BidHistory();
         // Get the Max and Min Utility Offers
@@ -83,9 +172,12 @@ public class Agent26 extends AbstractNegotiationParty {
         k = 0.2;
         b = 0.1;
         percent_increase = 0.05;
-        
+
+        //OpponentModelA = new OpponentModel();
+	
         // Get the Domain Issues
         domain_issues = this.utilitySpace.getDomain().getIssues();
+        number_of_issues = domain_issues.size();
         System.out.format("Domain has %d issues\n ", domain_issues.size());
         double curr_weight;
   
@@ -96,79 +188,93 @@ public class Agent26 extends AbstractNegotiationParty {
         max_num_of_values = 0;
         
         for(Issue lIssue : domain_issues) {
-        	System.out.format("MR BEAN INIT: %s number %d \n", lIssue.getName() , lIssue.getNumber() );
-        	IssueDiscrete lIssueDiscrete = (IssueDiscrete) lIssue;
-        	evaluator = (EvaluatorDiscrete) (((AdditiveUtilitySpace)this.utilitySpace).getEvaluator(lIssue.getNumber()));
-        	values = lIssueDiscrete.getValues();
-        	curr_weight = (additiveUtilitySpace_i.getWeight(lIssue.getNumber()));
-		if(curr_weight < min_weight) {
-		    min_weight = curr_weight;
-		}
-        	if(curr_weight > max_weight){
-        		max_weight = curr_weight;
-        	}	
-        	if(values.size() > max_num_of_values){
-        		max_num_of_values = values.size();
+	    System.out.format("MR BEAN INIT: %s number %d \n", lIssue.getName() , lIssue.getNumber() );
+	    IssueDiscrete lIssueDiscrete = (IssueDiscrete) lIssue;
+	    evaluator = (EvaluatorDiscrete) (((AdditiveUtilitySpace)this.utilitySpace).getEvaluator(lIssue.getNumber()));
+	    values = lIssueDiscrete.getValues();
+	    curr_weight = (additiveUtilitySpace_i.getWeight(lIssue.getNumber()));
+	    if(curr_weight < min_weight) {
+		min_weight = curr_weight;
+	    }
+	    if(curr_weight > max_weight){
+		max_weight = curr_weight;
+	    }	
+	    if(values.size() > max_num_of_values){
+		max_num_of_values = values.size();
 			
-        		//System.out.format("New maximum value of values %d \n", max_num_of_values);
-        	}
-        	for (ValueDiscrete value : values) {
-        		try{
-        			System.out.format("MR BEAN VALUE : %d %s %f \n" , lIssueDiscrete.getValueIndex(value.getValue()), value.getValue(), evaluator.getEvaluation(value));}
-        		catch (Exception e) {
-        			e.printStackTrace();
-        		}
-        	}
-          }
-          System.out.format("Max issue weight %f \n", max_weight);
-          //System.out.format("Building frequency array with %d issues and %d max values.. ", domain_issues.size() , max_num_of_values);
-          freq_a = new int [domain_issues.size()][max_num_of_values];
-          freq_b = new int [domain_issues.size()][max_num_of_values];
+		//System.out.format("New maximum value of values %d \n", max_num_of_values);
+	    }
+	    for (ValueDiscrete value : values) {
+		try{
+		    System.out.format("MR BEAN VALUE : %d %s %f \n" , lIssueDiscrete.getValueIndex(value.getValue()), value.getValue(), evaluator.getEvaluation(value));}
+		catch (Exception e) {
+		    e.printStackTrace();
+		}
+	    }
+	}
+	System.out.format("Max issue weight %f \n", max_weight);
+	//System.out.format("Building frequency array with %d issues and %d max values.. ", domain_issues.size() , max_num_of_values);
+	freq_a = new int [domain_issues.size()][max_num_of_values];
+	freq_b = new int [domain_issues.size()][max_num_of_values];
+
+	opponentA = new OpponentModel(domain_issues.size(), max_num_of_values, freq_a, domain_issues);
+	opponentB = new OpponentModel(domain_issues.size(), max_num_of_values, freq_b, domain_issues);
           
-          //Lets initialize the array 
-          for(int i = 0 ; i < domain_issues.size() ; i ++){
-        	  for(int j = 0 ; j < max_num_of_values ; j++){
-        		  freq_a [i][j] = 0;
-        		  freq_b [i][j] = 0;
-        	  }
-          }
+	//Lets initialize the array 
+	for(int i = 0 ; i < domain_issues.size() ; i ++){
+	    for(int j = 0 ; j < max_num_of_values ; j++){
+		freq_a [i][j] = 0;
+		freq_b [i][j] = 0;
+	    }
+	}
           
-        }
+    }
         
     
     public Action chooseAction(List<Class<? extends Action>> list) {
+	double panic;
+	panic = 0.95;
         // According to Stacked Alternating Offers Protocol list includes
         // Accept, Offer and EndNegotiation actions only.
     	if(lastReceivedOffer == null) {
-    		//Lets start with our maximum because we are bad boys
-    		System.out.println("\nOffering Maximum Utility Bid at the beginning");
-    		myLastOffer = maxUtilityOffer;                
-    		return new Offer(this.getPartyId(), myLastOffer);
+	    //Lets start with our maximum because we are bad boys
+	    System.out.println("\nOffering Maximum Utility Bid at the beginning");
+	    myLastOffer = maxUtilityOffer;                
+	    return new Offer(this.getPartyId(), myLastOffer);
     	}
     	
-	  //Every now and then just offer our maximum, depending on time..
-	 if(Math.random() > getTimeLine().getTime() + 0.7){
-            	//myLastOffer = this.getMaxUtilityBid();
-        		//System.out.println("\nOffering Maximum Utility Bid");
-        		//System.out.format("\nMaximum Utility is %f\n", this.utilitySpace.getUtility(maxUtilityOffer));
-    	        return new Offer(this.getPartyId(), maxUtilityOffer);
-		}
+	//Every now and then just offer our maximum, depending on time..
+	if(getTimeLine().getTime() < 0.4){
+	    //myLastOffer = this.getMaxUtilityBid();
+	    //System.out.println("\nOffering Maximum Utility Bid");
+	    //System.out.format("\nMaximum Utility is %f\n", this.utilitySpace.getUtility(maxUtilityOffer));
+	    return new Offer(this.getPartyId(), maxUtilityOffer);
+	}
   
         // Compute the target utility
         double util;
         util = this.getTargetUtility(k, b);
         //System.out.format("\nMrBean: Target utility %f \n", util);
         
-    	if(acceptOrOffer(lastReceivedOffer, util)) {
-    		//System.out.println("\nAccepting Offer");
-    		return new Accept(this.getPartyId(), lastReceivedOffer);
+	//System.out.println("Agent A");
+	opponentA.updateModel();
+	//System.out.println("Agent B");
+	opponentB.updateModel();
+        
+    	if(acceptOrOffer(lastReceivedOffer, util) || getTimeLine().getTime() > panic) {
+	    //System.out.println("\nAccepting Offer");
+	    return new Accept(this.getPartyId(), lastReceivedOffer);
     	}
     	else {
-    		//return new Offer(this.getPartyId(), myLastOffer);
-    		//Return average bid then!
-    		//myLastOffer =  getAverageBid();
-    		myLastOffer = generateBid();
-    		//System.out.format("\nMaking Offer with Average Utility %f\n", this.utilitySpace.getUtility(myLastOffer));
+	    //return new Offer(this.getPartyId(), myLastOffer);
+	    //Return average bid then!
+	    //myLastOffer =  getAverageBid();
+	    //if(getTimeLine().getTime() > 0.6){
+	    //myLastOffer = generateBid();}
+    	    //else {
+		myLastOffer = generateNashBid();
+		//}
+	    //System.out.format("\nMaking Offer with Average Utility %f\n", this.utilitySpace.getUtility(myLastOffer));
             return new Offer (this.getPartyId(), myLastOffer);    
     	}
     }
@@ -179,34 +285,54 @@ public class Agent26 extends AbstractNegotiationParty {
         super.receiveMessage(sender, act);
         BidDetails lastReceivedOfferDetails;
         // System.out.format(" TIME %f\n",getTimeLine().getTime() );
+
+
+	if (act instanceof Accept && lastReceivedOffer != null) {
+	    if(hashcode_a == 0) {
+		// Agent A is the first agent to make an offer
+		hashcode_a = sender.hashCode();
+	    }
+	    else if (hashcode_b == 0) {
+		// Agent B is the second agent to make an offer
+		hashcode_b = sender.hashCode();
+	    }
+	    if(sender.hashCode() == hashcode_a){
+		update_freq(lastReceivedOffer , 0);
+	    }
+	    else if(sender.hashCode() == hashcode_b){
+		update_freq(lastReceivedOffer , 1);
+	    }
+	}
+		        
         
         if (act instanceof Offer) {
-        	if(hashcode_a == 0) {
-        		// Agent A is the first agent to make an offer
-        		hashcode_a = sender.hashCode();
-        	}
-        	else if (hashcode_b == 0) {
-        		// Agent B is the second agent to make an offer
-        		hashcode_b = sender.hashCode();
-        	}
+	    if(hashcode_a == 0) {
+		// Agent A is the first agent to make an offer
+		hashcode_a = sender.hashCode();
+	    }
+	    else if (hashcode_b == 0) {
+		// Agent B is the second agent to make an offer
+		hashcode_b = sender.hashCode();
+	    }
             Offer offer = (Offer) act;
             lastReceivedOffer = offer.getBid();
             //System.out.format("\nReceived Offer with Utility %f from Agent %s\n", 
-            		//this.utilitySpace.getUtility(lastReceivedOffer), offer.getAgent().getName());
+	    //this.utilitySpace.getUtility(lastReceivedOffer), offer.getAgent().getName());
             lastReceivedOfferDetails = new BidDetails(lastReceivedOffer, 
-            										  this.utilitySpace.getUtility(lastReceivedOffer), 
-            										  getTimeLine().getTime());
+						      this.utilitySpace.getUtility(lastReceivedOffer), 
+						      getTimeLine().getTime());
             if(sender.hashCode() == hashcode_a){
             	// Store the offer in Agent A's History and Update the Frequencies
             	//agentAhistory.add(lastReceivedOfferDetails);
+		//OpponentModelA.updateModel(lastReceivedOffer);
             	update_freq(lastReceivedOffer , 0);
             }
             else if(sender.hashCode() == hashcode_b){
             	// Store the offer in Agent B's History
             	//agentBhistory.add(lastReceivedOfferDetails);
 		update_freq(lastReceivedOffer , 1);
-        	}
-		}
+	    }
+	}
     }
     
     //MrBean2 specific methods ..
@@ -216,164 +342,163 @@ public class Agent26 extends AbstractNegotiationParty {
             System.out.format("MR BEAN VALUE : %d %s %f \n" , lIssueDiscrete.getValueIndex(value.getValue()), value.getValue(), evaluator.getEvaluation(value));}
             catch (Exception e) {
             e.printStackTrace();
-             }
+	    }
             }*/
     
-    public void update_freq (Bid curr_bid , int agent_num){
+    public void update_freq (Bid curr_bid_freq , int agent_num){
     
     	java.util.List<Issue> bid_issues; 
     	java.util.HashMap<java.lang.Integer,Value> 	bid_values;
     	java.util.List<ValueDiscrete> issue_values;
     	IssueDiscrete lIssueDiscrete ;
     	ValueDiscrete lValueDiscrete;
-    	bid_issues = curr_bid.getIssues();
-    	bid_values = curr_bid.getValues();
+    	bid_issues = curr_bid_freq.getIssues();
+    	bid_values = curr_bid_freq.getValues();
     	// System.out.println("OFFER");
     
     
     	if(agent_num == 0){
-    		for (Integer curr_key : bid_values.keySet()){
-    			lIssueDiscrete = (IssueDiscrete) (bid_issues.get(curr_key -1));
-    			lValueDiscrete = (ValueDiscrete) bid_values.get(curr_key);
-    			//System.out.format("key %d  value string %s value num %d \n ", curr_key , lValueDiscrete.getValue() , lIssueDiscrete.getValueIndex(lValueDiscrete.getValue())); 
-    			freq_a [curr_key-1][lIssueDiscrete.getValueIndex(lValueDiscrete.getValue())] ++;
-    		}
+	    for (Integer curr_key : bid_values.keySet()){
+		lIssueDiscrete = (IssueDiscrete) (bid_issues.get(curr_key -1));
+		lValueDiscrete = (ValueDiscrete) bid_values.get(curr_key);
+		//System.out.format("key %d  value string %s value num %d \n ", curr_key , lValueDiscrete.getValue() , lIssueDiscrete.getValueIndex(lValueDiscrete.getValue())); 
+		freq_a [curr_key-1][lIssueDiscrete.getValueIndex(lValueDiscrete.getValue())] ++;
+	    }
     	}
     	else if(agent_num == 1){
-    		for (Integer curr_key : bid_values.keySet()){
-    			lIssueDiscrete = (IssueDiscrete) (bid_issues.get(curr_key -1));
-    			lValueDiscrete = (ValueDiscrete) bid_values.get(curr_key);
-    			//System.out.format("key %d  value string %s value num %d \n ", curr_key , lValueDiscrete.getValue() , lIssueDiscrete.getValueIndex(lValueDiscrete.getValue())); 
-    			freq_b [curr_key-1][lIssueDiscrete.getValueIndex(lValueDiscrete.getValue())] ++;
-    		}
+	    for (Integer curr_key : bid_values.keySet()){
+		lIssueDiscrete = (IssueDiscrete) (bid_issues.get(curr_key -1));
+		lValueDiscrete = (ValueDiscrete) bid_values.get(curr_key);
+		//System.out.format("key %d  value string %s value num %d \n ", curr_key , lValueDiscrete.getValue() , lIssueDiscrete.getValueIndex(lValueDiscrete.getValue())); 
+		freq_b [curr_key-1][lIssueDiscrete.getValueIndex(lValueDiscrete.getValue())] ++;
+	    }
     	}
     
     	int value_index , issue_idx;
     	issue_idx = 0;
     	//System.out.println("Printing frequency a");
     	for(Issue lIssue : bid_issues){
-    		lIssueDiscrete = (IssueDiscrete)  lIssue; //current issue
-    		issue_values  = lIssueDiscrete.getValues();     
-    		System.out.format("Issue %s\n" , lIssue.convertToString());
-    		for (ValueDiscrete value : issue_values) {
-    			value_index = lIssueDiscrete.getValueIndex(value.getValue());
-    			System.out.format("FREQ A Value %s Index %d Frequency %d \n\n", value.getValue() , value_index , freq_a[issue_idx][value_index]);
-    			System.out.format("FREQ B Value %s Index %d Frequency %d \n\n", value.getValue() , value_index , freq_b[issue_idx][value_index]);			
-    		}
+	    lIssueDiscrete = (IssueDiscrete)  lIssue; //current issue
+	    issue_values  = lIssueDiscrete.getValues();     
+	    //System.out.format("Issue %s\n" , lIssue.getNumber());
+	    for (ValueDiscrete value : issue_values) {
+		value_index = lIssueDiscrete.getValueIndex(value.getValue());
+		//System.out.format("FREQ A Value %s Index %d Frequency %d \n\n", value.getValue() , value_index , freq_a[issue_idx][value_index]);
+		//System.out.format("FREQ B Value %s Index %d Frequency %d \n\n", value.getValue() , value_index , freq_b[issue_idx][value_index]);			
+	    }
 		
-    		issue_idx ++;
+	    issue_idx ++;
     	}
     }
     
     public Bid generateBid(){
-    		//Traverse all issues on the Bid ...
-           	double max_value , curr_value ,randr;
-		double curr_time;
-           	int max_value_idx , num_values , issue_idx;
-           	Random randomnr = new Random();
-           	Bid generated_bid;
-           	HashMap<Integer, Value> curr_bid_value = new HashMap<Integer, Value>(); 
-           	int selected_value;
-           	generated_bid = null;
-           	int agent_max_val_idx , agent_max_val , curr_max_agent_value;
-           	randr =0;
+	//Traverse all issues on the Bid ...
+	double max_value , curr_value ,randr;
+	double curr_time;
+	int max_value_idx , num_values , issue_idx;
+	Random randomnr = new Random();
+	Bid generated_bid;
+	HashMap<Integer, Value> curr_bid_value = new HashMap<Integer, Value>(); 
+	int selected_value;
+	generated_bid = null;
+	int agent_max_val_idx , agent_max_val , curr_max_agent_value;
+	randr =0;
 
-		curr_time = getTimeLine().getTime();
+	curr_time = getTimeLine().getTime();
 		
-           	for(Issue lIssue : domain_issues) {
-           		num_values = 0 ;
-           		issue_idx = 0;
-           		//System.out.format("MR BEAN INIT: %s number %d \n", .getName() , Element.getNumber() );
-           		max_value = 0;
-           		max_value_idx = 0;
-           		curr_value = 0;
-           		IssueDiscrete lIssueDiscrete = (IssueDiscrete) lIssue;
-           		evaluator = (EvaluatorDiscrete) (((AdditiveUtilitySpace)this.utilitySpace).getEvaluator(lIssue.getNumber()));
-           		values = lIssueDiscrete.getValues(); //list of values for this particular issue
-           		//Get the number of the max value ...
-           		for (ValueDiscrete value : values ) {
-           			try{
-           				curr_value = evaluator.getEvaluation(value);}
-           			catch (Exception e) {
-           				e.printStackTrace();
-           			}
-           			if(curr_value > max_value){
-           				max_value = curr_value;
-           				max_value_idx =  lIssueDiscrete.getValueIndex(value.getValue());
-           			}	
-           			num_values ++;
-           		}
+	for(Issue lIssue : domain_issues) {
+	    num_values = 0 ;
+	    issue_idx = 0;
+	    //System.out.format("MR BEAN INIT: %s number %d \n", .getName() , Element.getNumber() );
+	    max_value = 0;
+	    max_value_idx = 0;
+	    curr_value = 0;
+	    IssueDiscrete lIssueDiscrete = (IssueDiscrete) lIssue;
+	    evaluator = (EvaluatorDiscrete) (((AdditiveUtilitySpace)this.utilitySpace).getEvaluator(lIssue.getNumber()));
+	    values = lIssueDiscrete.getValues(); //list of values for this particular issue
+	    //Get the number of the max value ...
+	    for (ValueDiscrete value : values ) {
+		try{
+		    curr_value = evaluator.getEvaluation(value);}
+		catch (Exception e) {
+		    e.printStackTrace();
+		}
+		if(curr_value > max_value){
+		    max_value = curr_value;
+		    max_value_idx =  lIssueDiscrete.getValueIndex(value.getValue());
+		}	
+		num_values ++;
+	    }
           
-           		//Throw a coin on the re-normalized weight ...
-			if(additiveUtilitySpace_i.getWeight(lIssue.getNumber()) != max_weight){
-			    if(Math.random() >   (additiveUtilitySpace_i.getWeight(lIssue.getNumber())  - min_weight )/ (max_weight - min_weight)) 
-           		{
-           			randr = Math.random();
-           			if( randr < (0.5)){
-        			   //get the max value idx from the freq array of agent ...
-        			   agent_max_val = 0;
-        			   agent_max_val_idx = 0;
-        			   for(int j = 0; j < lIssueDiscrete.getNumberOfValues() ; j++){
+	    //Throw a coin on the re-normalized weight ...
+	    if(additiveUtilitySpace_i.getWeight(lIssue.getNumber()) != max_weight){
+		if(Math.random() >   (additiveUtilitySpace_i.getWeight(lIssue.getNumber())  - min_weight )/ (max_weight - min_weight)) 
+		    {
+			randr = Math.random();
+			if( randr < (0.5)){
+			    //get the max value idx from the freq array of agent ...
+			    agent_max_val = 0;
+			    agent_max_val_idx = 0;
+			    for(int j = 0; j < lIssueDiscrete.getNumberOfValues() ; j++){
 
-        				   curr_max_agent_value = freq_a [issue_idx][j];
-        				   if(curr_max_agent_value > agent_max_val){
-        					   agent_max_val = curr_max_agent_value;
-        					   agent_max_val_idx = j;
-        				   }
-        			   }
+				curr_max_agent_value = freq_a [issue_idx][j];
+				if(curr_max_agent_value > agent_max_val){
+				    agent_max_val = curr_max_agent_value;
+				    agent_max_val_idx = j;
+				}
+			    }
 
-        			   selected_value = agent_max_val_idx;
-				   // System.out.format("\nAgen26: Conceiding Issue %s for agent A value %d \n", lIssue.getName(), selected_value );				   			   
-        		   }
+			    selected_value = agent_max_val_idx;
+			    // System.out.format("\nAgen26: Conceiding Issue %s for agent A value %d \n", lIssue.getName(), selected_value );				   			   
+			}
           
-				else {
-        			   agent_max_val = 0;
-        			   agent_max_val_idx = 0;
-        			   for(int j = 0; j < lIssueDiscrete.getNumberOfValues() ; j++){
-        				   curr_max_agent_value = freq_b [issue_idx][j];
-        				   if(curr_max_agent_value > agent_max_val){
-        					   agent_max_val = curr_max_agent_value;
-        					   agent_max_val_idx = j;
-        				   }
-        			   }
+			else {
+			    agent_max_val = 0;
+			    agent_max_val_idx = 0;
+			    for(int j = 0; j < lIssueDiscrete.getNumberOfValues() ; j++){
+				curr_max_agent_value = freq_b [issue_idx][j];
+				if(curr_max_agent_value > agent_max_val){
+				    agent_max_val = curr_max_agent_value;
+				    agent_max_val_idx = j;
+				}
+			    }
 				   
-        			   selected_value = agent_max_val_idx;
-				   // System.out.format("Agen26: Conceiding Issue %s for agent B value %d \n", lIssue.getName(), selected_value );
-        		   }
+			    selected_value = agent_max_val_idx;
+			    // System.out.format("Agen26: Conceiding Issue %s for agent B value %d \n", lIssue.getName(), selected_value );
+			}
         		   
-				//else {          
-        			   //chose random value ...
+			//else {          
+			//chose random value ...
 
-				// selected_value = randomnr.nextInt(num_values);
-			       	//			   System.out.format("Agen26: Pick random issue %d \n", selected_value );				   
-				//}          
-			}
+			// selected_value = randomnr.nextInt(num_values);
+			//			   System.out.format("Agen26: Pick random issue %d \n", selected_value );				   
+			//}          
+		    }
         	   
-        	   else {
-        		   selected_value = max_value_idx;
-        	   }
-			}
-		  else {
-        		   selected_value = max_value_idx;
-        	   }	
+		else {
+		    selected_value = max_value_idx;
+		}
+	    }
+	    else {
+		selected_value = max_value_idx;
+	    }	
           
-        	   curr_bid_value.put(lIssue.getNumber(), lIssueDiscrete.getValue(selected_value));                    
-        	   issue_idx ++;
-           }
+	    curr_bid_value.put(lIssue.getNumber(), lIssueDiscrete.getValue(selected_value));                    
+	    issue_idx ++;
+	}
           
-           generated_bid = new Bid(utilitySpace.getDomain(), curr_bid_value);
-           return generated_bid;
+	generated_bid = new Bid(utilitySpace.getDomain(), curr_bid_value);
+	return generated_bid;
     }
     
-    
-    
- // Method used to decided whether to Accept a Bid or Reject it
+        
+    // Method used to decided whether to Accept a Bid or Reject it
     public boolean acceptOrOffer(Bid bid, double target) {
     	if(this.utilitySpace.getUtility(bid) < target) {
-    		return false;
+	    return false;
     	}
     	else {
-    		return true;
+	    return true;
     	}
     }
     
@@ -401,16 +526,101 @@ public class Agent26 extends AbstractNegotiationParty {
         }
         return null;
     }
+
+    
+    private Bid generateNashBid(){
+    
+	double T , kmax , curr_energy , next_energy , predicted_b , predicted_a;
+	Bid altered_bid;
+	int random_issue_1 , random_issue_2;
+	HashMap<Integer, Value> curr_bid_value = new HashMap<Integer, Value>(); //auxiliary list for building the bid..
+	java.util.HashMap<java.lang.Integer,Value> 	bid_values;
+	java.util.List<ValueDiscrete> issue_values;
+    
+	//predicted_b = 1;
+	//predicted_a = 1;
+    
+	T = 40;
+    
+	kmax = 5200; // Tune this parameter , # of iterations....
+    
+	//curr_bid = this.getMinUtilityBid(); // we will start with max utility bid ....
+	//altered_bid = new Bid();
+	System.out.format ("Starting with utility %f \n", this.utilitySpace.getUtility(curr_bid));
+	Random randomnr = new Random();
+    
+	for(int k = 0 ; k <= kmax ; k++){
+	    predicted_a = 	opponentA.predictUtility(curr_bid);
+	    predicted_b =	opponentB.predictUtility(curr_bid);
+	    T = ( 1 - getTimeLine().getTime() ) * T * (k / kmax);
+	    altered_bid = curr_bid;
+	    //bid_issues = curr_bid.getIssues();
+	    bid_values = curr_bid.getValues();
+	    //Randomly select an issue and alter it ...
+	    random_issue_1 = randomnr.nextInt(number_of_issues);
+	    random_issue_2 = randomnr.nextInt(number_of_issues);
+	    curr_energy = this.utilitySpace.getUtility(curr_bid) * predicted_a * predicted_b; 
+	    //System.out.println("HERE");
+	    //   curr_bid_value.put(lIssue.getNumber(), lIssueDiscrete.getValue(selected_value))
+	    //   lIssueDiscrete.getValueIndex(lValueDiscrete.getValue())
+      
+	    for(Issue lIssue : domain_issues){
+		IssueDiscrete lIssueDiscrete = (IssueDiscrete) lIssue;
+		if( random_issue_1 != lIssue.getNumber() && random_issue_2 !=  lIssue.getNumber()){
+		    curr_bid_value.put(lIssue.getNumber() , bid_values.get(lIssue.getNumber()));}
+          	//alter one single issue putting a random value on it ...
+		else {
+		    //System.out.println("HERE 1");
+		    curr_bid_value.put(lIssue.getNumber() , lIssueDiscrete.getValue(randomnr.nextInt( lIssueDiscrete.getNumberOfValues())));
+		}
+    
+    
+	    }
+    
+	    altered_bid = new Bid(utilitySpace.getDomain(), curr_bid_value);
+	    predicted_a = 	opponentA.predictUtility(altered_bid);
+	    predicted_b =	opponentB.predictUtility(altered_bid);    
+	    next_energy = this.utilitySpace.getUtility(altered_bid) * predicted_a * predicted_b; 
+    
+	    //If P(E(s), E(snew), T) ≥ random(0, 1):
+	    //s ← snew
+	    // exp(-(e'-e)/T)
+    
+	    if(this.utilitySpace.getUtility(altered_bid) < 0.9){
+    
+    
+		if(next_energy > curr_energy ){
+    
+		    curr_bid = altered_bid;
+    
+		}
+    
+		//P = Math.exp(-(curr_energy - next_energy)/T);
+    
+		else if ( Math.exp( - (curr_energy - next_energy)/T) > Math.random()){
+		    //System.out.println("HERE 2");
+		    curr_bid = altered_bid;
+		}    
+	    }
+    
+	}
+        System.out.format (" pa %f pb %f \n", opponentA.predictUtility(curr_bid) ,opponentB.predictUtility(curr_bid) );
+
+        System.out.format ("End with utility %f \n", this.utilitySpace.getUtility(curr_bid));
+    
+	return curr_bid;
+    } 
+    
     
     // Method to return a Bid whose utility is the average of the best Offers from the other two Agents
     private Bid getAverageBid(){
-		double utility_a , utility_b , avg_utility;
-		utility_a = agentAhistory.getBestBidDetails().getMyUndiscountedUtil();
-		utility_b = agentBhistory.getBestBidDetails().getMyUndiscountedUtil(); 
-		avg_utility = ((utility_a + utility_b) /2)*(1+percent_increase);
-		return outcome_space.getBidNearUtility(avg_utility).getBid();
-	}
-	
+	double utility_a , utility_b , avg_utility;
+	utility_a = agentAhistory.getBestBidDetails().getMyUndiscountedUtil();
+	utility_b = agentBhistory.getBestBidDetails().getMyUndiscountedUtil(); 
+	avg_utility = ((utility_a + utility_b) /2)*(1+percent_increase);
+	return outcome_space.getBidNearUtility(avg_utility).getBid();
+    }
+        
     public String getDescription() {
         return description;
     }
