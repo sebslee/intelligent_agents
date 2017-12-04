@@ -281,7 +281,7 @@ public class Agent26 extends AbstractNegotiationParty {
 			//System.out.println("\nAccepting Offer");
 			return new Accept(this.getPartyId(), lastReceivedOffer);
 		}
-		else if (getTimeLine().getTime() > panic && acceptOrOffer(lastReceivedOffer, this.getTargetUtility(1, b)) ){
+		else if (getTimeLine().getTime() > panic && acceptOrOffer(lastReceivedOffer, this.getTargetUtility(1, 1)) ){
 			return new Accept(this.getPartyId(), lastReceivedOffer);
 		}
 
@@ -643,9 +643,9 @@ public class Agent26 extends AbstractNegotiationParty {
 			}
 
 		}
-		System.out.format (" pa %f pb %f \n", opponentA.predictUtility(curr_bid) ,opponentB.predictUtility(curr_bid) );
-
-		System.out.format ("End with utility %f \n", this.utilitySpace.getUtility(curr_bid));
+		
+		System.out.format("\nPredicted Utility for Agent A = %f,\n Predicted Utility for Agent B %f", opponentA.predictUtility(curr_bid) ,opponentB.predictUtility(curr_bid) );
+		System.out.format("\nEnd with utility %f \n", this.utilitySpace.getUtility(curr_bid));
 
 		return curr_bid;
 	} 

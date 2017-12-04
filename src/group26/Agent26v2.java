@@ -305,7 +305,7 @@ public class Agent26v2 extends AbstractNegotiationParty {
 	public void receiveMessage(AgentID sender, Action act) {
 
 		super.receiveMessage(sender, act);
-		BidDetails lastReceivedOfferDetails;
+		//BidDetails lastReceivedOfferDetails;
 		// System.out.format(" TIME %f\n",getTimeLine().getTime() );
 
 
@@ -340,9 +340,9 @@ public class Agent26v2 extends AbstractNegotiationParty {
 			lastReceivedOffer = offer.getBid();
 			//System.out.format("\nReceived Offer with Utility %f from Agent %s\n", 
 			//this.utilitySpace.getUtility(lastReceivedOffer), offer.getAgent().getName());
-			lastReceivedOfferDetails = new BidDetails(lastReceivedOffer, 
-					this.utilitySpace.getUtility(lastReceivedOffer), 
-					getTimeLine().getTime());
+			//lastReceivedOfferDetails = new BidDetails(lastReceivedOffer, 
+			//		this.utilitySpace.getUtility(lastReceivedOffer), 
+			//		getTimeLine().getTime());
 			if(sender.hashCode() == hashcode_a){
 				// Store the offer in Agent A's History and Update the Frequencies
 				//agentAhistory.add(lastReceivedOfferDetails);
@@ -559,12 +559,12 @@ public class Agent26v2 extends AbstractNegotiationParty {
 		java.util.HashMap<java.lang.Integer,Value> 	bid_values;
 		java.util.List<ValueDiscrete> issue_values;
 		
-		a = 0.1;
-		b = 0.1;
+		a = 0.05;
+		b = 0.05;
 
 		T_old = 20;
 
-		kmax = 1; // Tune this parameter , # of iterations....
+		kmax = 600; // Tune this parameter , # of iterations....
 
 		//curr_bid = this.getMinUtilityBid(); // we will start with max utility bid ....
 		//altered_bid = new Bid();
@@ -576,7 +576,7 @@ public class Agent26v2 extends AbstractNegotiationParty {
 			predicted_a = 	opponentA.predictUtility(curr_bid);
 			predicted_b =	opponentB.predictUtility(curr_bid);
 			
-			T = ( 1 - getTimeLine().getTime() ) * T_old * (k / kmax);
+			T = ( 1 - getTimeLine().getTime() ) * T_old * (kmax / k);
 			
 			curr_energy = our_utility * predicted_a * predicted_b +
 					a * (1.0/Math.max(0.1, Math.abs(our_utility - predicted_a))) +
