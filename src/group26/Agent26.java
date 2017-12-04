@@ -258,7 +258,7 @@ public class Agent26 extends AbstractNegotiationParty {
 
 	public Action chooseAction(List<Class<? extends Action>> list) {
 		double panic;
-		panic = 0.95;
+		panic = 0.99;
 		// According to Stacked Alternating Offers Protocol list includes
 		// Accept, Offer and EndNegotiation actions only.
 		if(lastReceivedOffer == null) {
@@ -570,11 +570,11 @@ public class Agent26 extends AbstractNegotiationParty {
 		a = 0;
 		b = 0;
 
-		T = 20;
+		T = 30;
 
-		kmax = 600; // Tune this parameter , # of iterations....
+		kmax = 900; // Tune this parameter , # of iterations....
 
-		//curr_bid = this.getMinUtilityBid(); // we will start with max utility bid ....
+		curr_bid = this.getMaxUtilityBid(); // we will start with max utility bid ....
 		//altered_bid = new Bid();
 		System.out.format ("Starting with utility %f \n", this.utilitySpace.getUtility(curr_bid));
 		Random randomnr = new Random();
