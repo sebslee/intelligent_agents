@@ -556,16 +556,12 @@ public class Agent26 extends AbstractNegotiationParty {
 
 	private Bid generateNashBid(){
 
-		double T , T_old,  kmax , curr_energy , next_energy , predicted_b , predicted_a , a , b;
+		double T ,  kmax , curr_energy , next_energy , our_utility, predicted_b , predicted_a , a , b;
 		Bid altered_bid;
 		int random_issue_1 , random_issue_2;
 		HashMap<Integer, Value> curr_bid_value = new HashMap<Integer, Value>(); //auxiliary list for building the bid..
 		java.util.HashMap<java.lang.Integer,Value> 	bid_values;
 		java.util.List<ValueDiscrete> issue_values;
-
-		//predicted_b = 1;
-		//predicted_a = 1;
-
 
 		a = 0;
 		b = 0;
@@ -580,22 +576,23 @@ public class Agent26 extends AbstractNegotiationParty {
 		Random randomnr = new Random();
 
 		for(int k = 1 ; k <= kmax ; k++){
-			predicted_a = 	opponentA.predictUtility(curr_bid);
-			predicted_b =	opponentB.predictUtility(curr_bid);
-			T_old = T;
-			T = ( 1 - getTimeLine().getTime() ) * T_old * (k / kmax);
+			our_utility = this.utilitySpace.getUtility(curr_bid);
+			predicted_a = opponentA.predictUtility(curr_bid);
+			predicted_b = opponentB.predictUtility(curr_bid);
+			T = ( 1 - getTimeLine().getTime() ) * T * (k / kmax);
 			altered_bid = curr_bid;
 			//bid_issues = curr_bid.getIssues();
 			bid_values = curr_bid.getValues();
 			//Randomly select an issue and alter it ...
 			random_issue_1 = randomnr.nextInt(number_of_issues);
 			random_issue_2 = randomnr.nextInt(number_of_issues);
-			//curr_energy = this.utilitySpace.getUtility(curr_bid) * predicted_a * predicted_b;
-			curr_energy = this.utilitySpace.getUtility(curr_bid) * predicted_a * predicted_b +
-					a * (1.0/ (Math.abs(this.utilitySpace.getUtility(curr_bid) - predicted_a ))) +
-					a * (1.0/ (Math.abs( this.utilitySpace.getUtility(curr_bid) - predicted_b) )) +
-					a * (1.0/ Math.abs((predicted_b - predicted_a )))
-					+ b * ( this.utilitySpace.getUtility(curr_bid)); 	    
+
+			curr_energy = our_utility * predicted_a * predicted_b +
+					a * (1.0/Math.max(0.1, Math.abs(our_utility - predicted_a))) +
+					a * (1.0/Math.max(0.1, Math.abs(our_utility - predicted_b))) +
+					a * (1.0/Math.max(0.1, Math.abs(predicted_b - predicted_a)))
+					+ b * (our_utility); 	
+			
 			//System.out.println("HERE");
 			//   curr_bid_value.put(lIssue.getNumber(), lIssueDiscrete.getValue(selected_value))
 			//   lIssueDiscrete.getValueIndex(lValueDiscrete.getValue())
@@ -614,14 +611,15 @@ public class Agent26 extends AbstractNegotiationParty {
 			}
 
 			altered_bid = new Bid(utilitySpace.getDomain(), curr_bid_value);
-			predicted_a = 	opponentA.predictUtility(altered_bid);
-			predicted_b =	opponentB.predictUtility(altered_bid);    
-			next_energy = this.utilitySpace.getUtility(altered_bid) * predicted_a * predicted_b +
-					a * (1.0/ (Math.abs(this.utilitySpace.getUtility(altered_bid) - predicted_a ))) +
-					a* (1.0/ (Math.abs( this.utilitySpace.getUtility(altered_bid) - predicted_b) )) +
-					a * (1.0/ Math.abs((predicted_b - predicted_a )))
-					+ b * ( this.utilitySpace.getUtility(altered_bid));
-			; 
+			our_utility = this.utilitySpace.getUtility(altered_bid);
+			predicted_a = opponentA.predictUtility(altered_bid);
+			predicted_b = opponentB.predictUtility(altered_bid);    
+			
+			next_energy = our_utility * predicted_a * predicted_b +
+					a * (1.0/Math.max(0.1, Math.abs(our_utility - predicted_a))) +
+					a * (1.0/Math.max(0.1, Math.abs(our_utility - predicted_b))) +
+					a * (1.0/Math.max(0.1, Math.abs(predicted_b - predicted_a)))
+					+ b * (our_utility);
 
 			//If P(E(s), E(snew), T) ≥ random(0, 1):
 			//s ← snew
