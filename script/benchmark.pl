@@ -45,7 +45,7 @@ my $global_fails;
 my @agents;
 my $num_of_domains;
 
-$num_of_domains = 3;
+$num_of_domains = 8;
 
 open (agent_database, "<" , "agents.dat")
     or die ("\n Can not open agents database agents.dat...\n"); 
@@ -58,7 +58,7 @@ $global_utility = 0;
 $global_wins = 0;
 $global_fails = 0;
 
-$num_of_agents = 14;
+$num_of_agents = 16;
 $domain = 0;
 $it = 0;
 
@@ -93,15 +93,13 @@ for($it = 0 ; $it < $number_of_tournaments ; $it++){
     open ( OUTFILE , ">" , "multiparty_custom_tournament_gen.xml") or die;
     @lines = <CUSTOM_TOURNAMENT>;
     $size = @lines;
-
+    chomp($random_agent_1);
+    chomp($random_agent_2);
     print ("I: Generating random configuration ...;\n");
     print ("I: Random agent 1 : $random_agent_1\n");
     print ("I: Random agent 2 : $random_agent_2\n");
 
-    chomp($random_agent_1);
-    chomp($random_agent_2);
-
-    $domain = int (rand($num_of_domains-1));
+    $domain = int (rand($num_of_domains));
     
     if($domain == 0){
 	print ("I: Running with party domain ...\n");
@@ -110,11 +108,23 @@ for($it = 0 ; $it < $number_of_tournaments ; $it++){
 	print ("I: Running with University domain ...\n");
     }
     elsif($domain == 2){
-	print ("I: Running with Consumer producer provider domain ...\n");
+	print ("I: Running with politics domain ...\n");
     }
-    elsif($domain == 0){
+    elsif($domain == 3){
 	print ("I: Running with Japan trip domain ...\n");
-    }    
+    }
+    elsif($domain == 4){
+	print ("I: Running with  Bank Robery domain ...\n");
+    }
+    elsif($domain == 5){
+	print ("I: Running with smart grid domain ...\n");
+    } 
+    elsif($domain == 6){
+	print ("I: Running with PEenergy domain ...\n");
+    }      
+    elsif($domain == 7){
+	print ("I: Running SportHall domain ...\n");
+    }       
 
     for( $i = 0  ; $i < $size ; $i++){
 	if($lines[$i] =~ /<partyRepItems/){
@@ -156,11 +166,11 @@ for($it = 0 ; $it < $number_of_tournaments ; $it++){
 	    elsif($domain == 2) {
 		print  OUTFILE $lines[$i];
 		$i++;
-		print OUTFILE '<item url="file:etc/templates/ANAC2016/AgentHp2/consumer.xml" />' ;
+		print OUTFILE '<item url="file:etc/templates/ANAC2015/group2-politics/Politics_util1.xml" />' ;
 		$i++;
-		print OUTFILE '<item url="file:etc/templates/ANAC2016/AgentHp2/producer.xml" />' ;
+		print OUTFILE '<item url="file:etc/templates/ANAC2015/group2-politics/Politics_util2.xml" />' ;
 		$i++;
-		print OUTFILE '<item url="file:etc/templates/ANAC2016/AgentHp2/provider.xml" />' ;	
+		print OUTFILE '<item url="file:etc/templates/ANAC2015/group2-politics/Politics_util3.xml" />' ;	
 	    }
 	    elsif($domain == 3) {
 		print  OUTFILE $lines[$i];
@@ -170,7 +180,45 @@ for($it = 0 ; $it < $number_of_tournaments ; $it++){
 		print OUTFILE '<item url="file:etc/templates/ANAC2016/SYAgent/JapanTrip_util2.xml" />' ;
 		$i++;
 		print OUTFILE '<item url="file:etc/templates/ANAC2016/SYAgent/JapanTrip_util3.xml" />' ;	
+	    }
+	    elsif($domain == 4) {
+		print  OUTFILE $lines[$i];
+		$i++;
+		print OUTFILE '<item url="file:etc/templates/ANAC2015/group3-bank_robbery/Bank_Robbery_util1.xml" />' ;
+		$i++;
+		print OUTFILE '<item url="file:etc/templates/ANAC2015/group3-bank_robbery/Bank_Robbery_util2.xml" />' ;
+		$i++;
+		print OUTFILE '<item url="file:etc/templates/ANAC2015/group3-bank_robbery/Bank_Robbery_util3.xml" />' ;	
+	    }
+	    elsif($domain == 5) {
+		print  OUTFILE $lines[$i];
+		$i++;
+		print OUTFILE '<item url="file:etc/templates/ANAC2016/Caduceus/Smart_Grid_util1.xml" />' ;
+		$i++;
+		print OUTFILE '<item url="file:etc/templates/ANAC2016/Caduceus/Smart_Grid_util2.xml" />' ;
+		$i++;
+		print OUTFILE '<item url="file:etc/templates/ANAC2016/Caduceus/Smart_Grid_util3.xml" />' ;	
+	    }
+	    elsif($domain == 6) {
+		print  OUTFILE $lines[$i];
+		$i++;
+		print OUTFILE '<item url="file:etc/templates/ANAC2016/parsAgent2/PEnergy_util1.xml" />' ;
+		$i++;
+		print OUTFILE '<item url="file:etc/templates/ANAC2016/parsAgent2/PEnergy_util2.xml" />' ;
+		$i++;
+		print OUTFILE '<item url="file:etc/templates/ANAC2016/parsAgent2/PEnergy_util3.xml" />' ;	
+	    }	 
+	    elsif($domain == 7) {
+		print  OUTFILE $lines[$i];
+		$i++;
+		print OUTFILE '<item url="file:etc/templates/ANAC2015/group2-new_sporthal/New_sporthal_util1.xml" />' ;
+		$i++;
+		print OUTFILE '<item url="file:etc/templates/ANAC2015/group2-new_sporthal/New_sporthal_util2.xml" />' ;
+		$i++;
+		print OUTFILE '<item url="file:etc/templates/ANAC2015/group2-new_sporthal/New_sporthal_util1.xml" />' ;	
 	    }	
+	    
+	    
 	    
 	    
 	}
@@ -246,7 +294,7 @@ for($it = 0 ; $it < $number_of_tournaments ; $it++){
 	elsif($util_2 > $util1 && $util_2 > $util_3){
 	    $max_util = $util_2;
 	}
-	elsif($util_3 > $util1 && $util_3 > $util_2){
+	elsif($util_3 >= $util1 && $util_3 >= $util_2){
 	    $max_util = $util_3;
 	}
 	print ("@ $i $our_agent utility: $our_agent_utility max utility : $max_util \n ");
@@ -294,6 +342,7 @@ $global_wins = $global_wins /$number_of_tournaments;
 $global_fails = $global_fails / $number_of_tournaments;
 
 print ("\n SUMMARY \n 
+           Number of tournaments : $number_of_tournaments\n
            Global utility : $global_utility \n
            Nash : $global_nash_distance \n
            Pareto : $global_pareto_distance \n
