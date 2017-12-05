@@ -238,6 +238,8 @@ public class mrBean extends AbstractNegotiationParty {
 
 
 	public Action chooseAction(List<Class<? extends Action>> list) {
+		double panic;
+		panic = 0.98;
 		// According to Stacked Alternating Offers Protocol list includes
 		// Accept, Offer and EndNegotiation actions only.
 		if(lastReceivedOffer == null) {
@@ -248,7 +250,7 @@ public class mrBean extends AbstractNegotiationParty {
 		}
 
 		//Every now and then just offer our maximum, depending on time..
-		if(getTimeLine().getTime() <= 0.30){
+		if(getTimeLine().getTime() < 0.4){
 			//myLastOffer = this.getMaxUtilityBid();
 			//System.out.println("\nOffering Maximum Utility Bid");
 			//System.out.format("\nMaximum Utility is %f\n", this.utilitySpace.getUtility(maxUtilityOffer));
@@ -267,6 +269,9 @@ public class mrBean extends AbstractNegotiationParty {
 
 		if(acceptOrOffer(lastReceivedOffer, util)) {
 			System.out.println("\nAccepting Offer");
+			return new Accept(this.getPartyId(), lastReceivedOffer);
+		}
+		else if (getTimeLine().getTime() > panic){
 			return new Accept(this.getPartyId(), lastReceivedOffer);
 		}
 		else {
@@ -385,16 +390,25 @@ public class mrBean extends AbstractNegotiationParty {
 		double max_value , curr_value ,randr;
 		double curr_time;
 		int max_value_idx , num_values , issue_idx;
-		Random randomnr = new Random();
 		Bid generated_bid;
 		HashMap<Integer, Value> curr_bid_value = new HashMap<Integer, Value>(); 
 		int selected_value;
 		generated_bid = null;
-		int agent_max_val_idx , agent_max_val , curr_max_agent_value;
+
 		randr =0;
 
+		int N_issues;
+
+		N_issues = domain_issues.size();
+
+		int count_A = N_issues/3;
+		int count_B = N_issues/3;
+		int our_count = N_issues - count_A - count_B;
+
+		System.out.format("\nAt the beginning, Count A = %d, Count B = %d, Our Count = %d\n", count_A, count_B, our_count);
+
 		curr_time = getTimeLine().getTime();
-		
+
 		System.out.format("\nCurrent Time = %f\n", curr_time);
 
 		for(Issue lIssue : domain_issues) {
@@ -425,18 +439,38 @@ public class mrBean extends AbstractNegotiationParty {
 			double our_weight = additiveUtilitySpace_i.getWeight(lIssue.getNumber());
 			double agentA_weight = opponentA.getWeight(lIssue.getNumber()-1);
 			double agentB_weight = opponentB.getWeight(lIssue.getNumber()-1);
-			double multiplier = 1.0;
-			if(agentA_weight > our_weight && agentA_weight > agentB_weight) {
+			if(our_weight > agentA_weight && our_weight > agentB_weight){
+				our_count--;
+				selected_value = max_value_idx;
+				System.out.format("\nGiving issue %d, a value %d which is our maximum\n", lIssue.getNumber(), selected_value);
+			}
+			else if(agentA_weight > our_weight && agentA_weight > agentB_weight) {
+				count_A--;
 				selected_value = opponentA.getIssueMaxValueIndex(lIssue.getNumber()-1);
 				System.out.format("\nGiving issue %d, a value %d for Agent A\n", lIssue.getNumber(), selected_value);
 			}
 			else if(agentB_weight > our_weight && agentB_weight > agentA_weight) {
+				count_B--;
 				selected_value = opponentB.getIssueMaxValueIndex(lIssue.getNumber()-1);
 				System.out.format("\nGiving issue %d, a value %d for Agent B\n", lIssue.getNumber(), selected_value);
 			}
 			else {
-				selected_value = max_value_idx;
-				System.out.format("\nGiving issue %d, a value %d which is our maximum\n", lIssue.getNumber(), selected_value);
+				randr = Math.random();
+				if(randr < ((count_A)*1.0/N_issues)) {
+					count_A--;
+					selected_value = opponentA.getIssueMaxValueIndex(lIssue.getNumber()-1);
+					System.out.format("\nRandomly Giving issue %d, a value %d for Agent A\n", lIssue.getNumber(), selected_value);
+				}
+				else if(randr < ((N_issues-our_count)*1.0/N_issues)) {
+					count_B--;
+					selected_value = opponentB.getIssueMaxValueIndex(lIssue.getNumber()-1);
+					System.out.format("\nRandomly Giving issue %d, a value %d for Agent B\n", lIssue.getNumber(), selected_value);
+				}
+				else {
+					our_count--;
+					selected_value = max_value_idx;
+					System.out.format("\nRandomly Giving issue %d, a value %d which is our maximum\n", lIssue.getNumber(), selected_value);
+				}
 			}
 
 			curr_bid_value.put(lIssue.getNumber(), lIssueDiscrete.getValue(selected_value));                    
